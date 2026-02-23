@@ -10,7 +10,7 @@ import Footer from '@/components/footer';
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
 
 export const metadata: Metadata = {
-  title: 'Thrift Plug',
+  title: 'Thrift Clothing Plug',
   description: 'Your one-stop shop for curated thrift clothing.',
 };
 

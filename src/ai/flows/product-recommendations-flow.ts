@@ -1,6 +1,6 @@
 'use server';
 /**
- * @fileOverview This file provides an AI-powered product recommendation flow for the thrift_clothing_plug_ store.
+ * @fileOverview This file provides an AI-powered product recommendation flow for the Thrift Clothing Plug store.
  *
  * - recommendProducts - A function that generates personalized product recommendations.
  * - ProductRecommendationsInput - The input type for the recommendProducts function.
@@ -41,7 +41,7 @@ const prompt = ai.definePrompt({
   name: 'productRecommendationsPrompt',
   input: {schema: ProductRecommendationsInputSchema},
   output: {schema: ProductRecommendationsOutputSchema},
-  prompt: `You are an expert fashion stylist specializing in personalized recommendations for a thrift store named "thrift_clothing_plug_".
+  prompt: `You are an expert fashion stylist specializing in personalized recommendations for a thrift store named "Thrift Clothing Plug".
 Your goal is to suggest relevant thrift clothing items to a shopper based on their past browsing activity, general popular items, and their stated preferences.
 
 Consider the following information to generate your recommendations:
