@@ -1,3 +1,64 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "vintage-tee-1",
+      "description": "Front view of a vintage band t-shirt",
+      "imageUrl": "https://images.unsplash.com/photo-1765477619742-0aed953e6f78?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHx2aW50YWdlJTIwdC1zaGlydHxlbnwwfHx8fDE3NzE4NzgzMTF8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "vintage t-shirt"
+    },
+    {
+      "id": "vintage-tee-2",
+      "description": "Close-up of a vintage band t-shirt graphic",
+      "imageUrl": "https://images.unsplash.com/photo-1768935706759-f2be765b3aec?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHx0LXNoaXJ0JTIwZ3JhcGhpY3xlbnwwfHx8fDE3NzE4NzgzMTF8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "t-shirt graphic"
+    },
+    {
+      "id": "denim-jacket-1",
+      "description": "Front view of a classic denim jacket",
+      "imageUrl": "https://images.unsplash.com/photo-1615943168243-5b2503679e47?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8ZGVuaW0lMjBqYWNrZXR8ZW58MHx8fHwxNzcxODc4MzExfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "denim jacket"
+    },
+    {
+      "id": "denim-jacket-2",
+      "description": "Back view of a classic denim jacket",
+      "imageUrl": "https://images.unsplash.com/photo-1761245047353-f39889f02031?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxkZW5pbSUyMGphY2tldCUyMGJhY2t8ZW58MHx8fHwxNzcxODc4MzExfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "denim jacket back"
+    },
+    {
+      "id": "floral-dress-1",
+      "description": "Full view of a floral sundress",
+      "imageUrl": "https://images.unsplash.com/photo-1567108446473-7c63eb5645c0?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxmbG9yYWwlMjBkcmVzc3xlbnwwfHx8fDE3NzE4NzgzMTF8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "floral dress"
+    },
+    {
+      "id": "floral-dress-2",
+      "description": "Pattern detail of a floral sundress",
+      "imageUrl": "https://images.unsplash.com/photo-1597259058442-f107bcb02fc7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxmbG93ZXIlMjBwYXR0ZXJufGVufDB8fHx8MTc3MTg3ODMxMXww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "flower pattern"
+    },
+    {
+      "id": "corduroy-pants-1",
+      "description": "Front view of brown corduroy pants",
+      "imageUrl": "https://images.unsplash.com/photo-1771506305587-fd3a53248351?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxjb3JkdXJveSUyMHBhbnRzfGVufDB8fHx8MTc3MTg3ODMxMXww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "corduroy pants"
+    },
+    {
+      "id": "plaid-shirt-1",
+      "description": "Front view of a red plaid flannel shirt",
+      "imageUrl": "https://images.unsplash.com/photo-1614173822540-42f37b13262b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxwbGFpZCUyMHNoaXJ0fGVufDB8fHx8MTc3MTg3ODMxMXww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "plaid shirt"
+    },
+    {
+      "id": "leather-boots-1",
+      "description": "Side view of worn leather boots",
+      "imageUrl": "https://images.unsplash.com/photo-1602250523361-ff299f086e1e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxsZWF0aGVyJTIwYm9vdHN8ZW58MHx8fHwxNzcxNzgxNzgwfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "leather boots"
+    },
+    {
+      "id": "graphic-hoodie-1",
+      "description": "Front view of a grey graphic hoodie",
+      "imageUrl": "https://images.unsplash.com/photo-1760126130341-fa58ff0750eb?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxncmFwaGljJTIwaG9vZGllfGVufDB8fHx8MTc3MTg3Mzc0Mnww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "graphic hoodie"
+    }
+  ]
 }
