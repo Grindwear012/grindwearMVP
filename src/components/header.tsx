@@ -6,7 +6,6 @@ import {
   ShoppingCart,
   User,
   Menu,
-  Sparkles,
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -15,7 +14,8 @@ import {
   Sheet,
   SheetContent,
   SheetTrigger,
-} from "@/components/ui/sheet"
+} from "@/components/ui/sheet";
+import { Logo } from './logo';
 
 export default function Header() {
   const { cartCount } = useCart();
@@ -32,10 +32,7 @@ export default function Header() {
       <div className="container flex h-16 items-center">
         <div className="mr-4 hidden md:flex">
           <Link href="/" className="mr-6 flex items-center space-x-2">
-            <Sparkles className="h-6 w-6" />
-            <span className="hidden font-bold sm:inline-block">
-              thrift_clothing_plug_
-            </span>
+            <Logo textClasses="hidden sm:inline-block" />
           </Link>
           <nav className="flex items-center space-x-6 text-sm font-medium">
             {navItems.map((item) => (
@@ -60,10 +57,7 @@ export default function Header() {
             </SheetTrigger>
             <SheetContent side="left">
                <Link href="/" className="mr-6 flex items-center space-x-2 mb-6">
-                <Sparkles className="h-6 w-6" />
-                <span className="font-bold">
-                  thrift_clothing_plug_
-                </span>
+                <Logo />
               </Link>
               <nav className="flex flex-col space-y-4">
                  {navItems.map((item) => (
