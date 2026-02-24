@@ -30,8 +30,9 @@ import {
 } from '@/firebase/non-blocking-login';
 import { useAuth, useUser } from '@/firebase';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { Eye, EyeOff } from 'lucide-react';
 
 const signInSchema = z.object({
   email: z.string().email(),
@@ -49,6 +50,7 @@ export default function LoginPage() {
   const { user, isUserLoading } = useUser();
   const router = useRouter();
   const { toast } = useToast();
+  const [showPassword, setShowPassword] = useState(false);
 
   const signInForm = useForm<z.infer<typeof signInSchema>>({
     resolver: zodResolver(signInSchema),
@@ -76,7 +78,7 @@ export default function LoginPage() {
 
   function onSignUpSubmit(values: z.infer<typeof signUpSchema>) {
     initiateEmailSignUp(auth, values.email, values.password);
-     toast({
+    toast({
       title: 'Creating Account...',
       description: 'Please wait while we create your account.',
     });
@@ -84,16 +86,15 @@ export default function LoginPage() {
 
   if (isUserLoading) {
     return (
-       <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center p-4">
+      <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center p-4">
         <p>Loading...</p>
       </div>
-    )
+    );
   }
 
   if (user) {
     return null; // Or a loading spinner, as the redirect will happen shortly
   }
-
 
   return (
     <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center p-4">
@@ -136,16 +137,42 @@ export default function LoginPage() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Password</FormLabel>
-                        <FormControl>
-                          <Input type="password" {...field} />
-                        </FormControl>
+                        <div className="relative">
+                          <FormControl>
+                            <Input
+                              type={showPassword ? 'text' : 'password'}
+                              {...field}
+                              placeholder="••••••••"
+                            />
+                          </FormControl>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="absolute right-1 top-1/2 h-auto w-auto -translate-y-1/2 p-2 text-muted-foreground"
+                            onClick={() => setShowPassword(!showPassword)}
+                          >
+                            {showPassword ? (
+                              <EyeOff className="h-4 w-4" />
+                            ) : (
+                              <Eye className="h-4 w-4" />
+                            )}
+                            <span className="sr-only">
+                              {showPassword ? 'Hide password' : 'Show password'}
+                            </span>
+                          </Button>
+                        </div>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
                 </CardContent>
                 <CardFooter className="flex-col gap-4">
-                  <Button className="w-full" type="submit" disabled={signInForm.formState.isSubmitting}>
+                  <Button
+                    className="w-full"
+                    type="submit"
+                    disabled={signInForm.formState.isSubmitting}
+                  >
                     Sign In
                   </Button>
                   <p className="text-xs text-muted-foreground">
@@ -206,16 +233,42 @@ export default function LoginPage() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Password</FormLabel>
-                        <FormControl>
-                          <Input type="password" {...field} />
-                        </FormControl>
+                        <div className="relative">
+                          <FormControl>
+                            <Input
+                              type={showPassword ? 'text' : 'password'}
+                              {...field}
+                              placeholder="••••••••"
+                            />
+                          </FormControl>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="absolute right-1 top-1/2 h-auto w-auto -translate-y-1/2 p-2 text-muted-foreground"
+                            onClick={() => setShowPassword(!showPassword)}
+                          >
+                            {showPassword ? (
+                              <EyeOff className="h-4 w-4" />
+                            ) : (
+                              <Eye className="h-4 w-4" />
+                            )}
+                            <span className="sr-only">
+                              {showPassword ? 'Hide password' : 'Show password'}
+                            </span>
+                          </Button>
+                        </div>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
                 </CardContent>
                 <CardFooter className="flex-col gap-4">
-                  <Button className="w-full" type="submit" disabled={signUpForm.formState.isSubmitting}>
+                  <Button
+                    className="w-full"
+                    type="submit"
+                    disabled={signUpForm.formState.isSubmitting}
+                  >
                     Create Account
                   </Button>
                   <p className="text-xs text-muted-foreground">
