@@ -1,3 +1,5 @@
+'use client';
+
 import {
   Card,
   CardContent,
@@ -17,8 +19,29 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useUser } from '@/firebase';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 
 export default function AccountPage() {
+  const { user, isUserLoading } = useUser();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!isUserLoading && !user) {
+      router.push('/login');
+    }
+  }, [user, isUserLoading, router]);
+
+  if (isUserLoading || !user) {
+    return (
+      <div className="container mx-auto py-12 text-center">
+        <p>Loading account details...</p>
+      </div>
+    );
+  }
+
+
   const mockOrders = [
     { id: 'ORD001', date: '2023-10-26', total: '$120.00', status: 'Shipped' },
     { id: 'ORD002', date: '2023-10-20', total: '$45.00', status: 'Delivered' },
@@ -83,11 +106,11 @@ export default function AccountPage() {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="name">Name</Label>
-                <Input id="name" defaultValue="John Doe" />
+                <Input id="name" defaultValue={user.displayName || ''} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" defaultValue="john.doe@example.com" />
+                <Input id="email" type="email" defaultValue={user.email || ''} readOnly />
               </div>
                <Button>Save Changes</Button>
             </CardContent>
@@ -103,7 +126,7 @@ export default function AccountPage() {
             </CardHeader>
             <CardContent className="space-y-4">
                <div className="border rounded-lg p-4">
-                  <p className="font-semibold">John Doe</p>
+                  <p className="font-semibold">{user.displayName || 'Default User'}</p>
                   <p className="text-muted-foreground">123 Main St, Anytown, USA 12345</p>
                   <div className="mt-2 space-x-2">
                     <Button variant="outline" size="sm">Edit</Button>

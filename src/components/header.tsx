@@ -16,9 +16,24 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Logo } from './logo';
+import { useAuth, useUser } from '@/firebase';
+import { signOut } from 'firebase/auth';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useRouter } from 'next/navigation';
 
 export default function Header() {
   const { cartCount } = useCart();
+  const { user, isUserLoading } = useUser();
+  const auth = useAuth();
+  const router = useRouter();
+
   const navItems = [
     { name: 'Home', href: '/' },
     { name: 'Tops', href: '/products?category=Tops' },
@@ -26,6 +41,12 @@ export default function Header() {
     { name: 'Outerwear', href: '/products?category=Outerwear' },
     { name: 'Dresses', href: '/products?category=Dresses' },
   ];
+
+  const handleSignOut = async () => {
+    await signOut(auth);
+    router.push('/');
+  };
+
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -89,12 +110,39 @@ export default function Header() {
             </form>
           </div>
           <nav className="flex items-center space-x-2">
-            <Link href="/login">
-              <Button variant="ghost" size="icon">
-                <User className="h-5 w-5" />
-                <span className="sr-only">Account</span>
-              </Button>
-            </Link>
+             {isUserLoading ? (
+              <div className="h-8 w-8 rounded-full bg-muted animate-pulse" />
+            ) : user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon">
+                    <User className="h-5 w-5" />
+                    <span className="sr-only">Account</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link href="/account">Profile</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/account">Orders</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleSignOut}>
+                    Sign Out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Link href="/login">
+                <Button variant="ghost" size="icon">
+                  <User className="h-5 w-5" />
+                  <span className="sr-only">Login</span>
+                </Button>
+              </Link>
+            )}
             <Link href="/cart">
               <Button variant="ghost" size="icon" className="relative">
                 <ShoppingCart className="h-5 w-5" />

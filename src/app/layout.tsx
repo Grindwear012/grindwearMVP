@@ -6,11 +6,12 @@ import Header from '@/components/header';
 import { CartProvider } from '@/hooks/use-cart';
 import { Toaster } from '@/components/ui/toaster';
 import Footer from '@/components/footer';
+import { FirebaseClientProvider } from '@/firebase/client-provider';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
 
 export const metadata: Metadata = {
-  title: 'Thrift Clothing Plug',
+  title: 'Thrift Plug',
   description: 'Your one-stop shop for curated thrift clothing.',
 };
 
@@ -27,14 +28,16 @@ export default function RootLayout({
           inter.variable
         )}
       >
-        <CartProvider>
-          <div className="relative flex min-h-dvh flex-col bg-background">
-            <Header />
-            <main className="flex-1">{children}</main>
-            <Footer />
-          </div>
-          <Toaster />
-        </CartProvider>
+        <FirebaseClientProvider>
+          <CartProvider>
+            <div className="relative flex min-h-dvh flex-col bg-background">
+              <Header />
+              <main className="flex-1">{children}</main>
+              <Footer />
+            </div>
+            <Toaster />
+          </CartProvider>
+        </FirebaseClientProvider>
       </body>
     </html>
   );

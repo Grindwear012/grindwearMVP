@@ -42,7 +42,7 @@ export default function Footer() {
           </div>
         </div>
         <div className="mt-8 border-t pt-8 flex flex-col sm:flex-row justify-between items-center">
-          <p className="text-sm text-muted-foreground">&copy; {new Date().getFullYear()} THRIFT CLOTHING PLUG. All Rights Reserved.</p>
+          <p className="text-sm text-muted-foreground">&copy; {new Date().getFullYear()} Thrift Plug. All Rights Reserved.</p>
            <div className="flex space-x-4 mt-4 sm:mt-0">
               <Link href="#" className="text-muted-foreground hover:text-primary"><Twitter className="h-5 w-5" /></Link>
               <Link href="#" className="text-muted-foreground hover:text-primary"><Instagram className="h-5 w-5" /></Link>
