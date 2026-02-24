@@ -1,6 +1,5 @@
 import Link from 'next/link';
 import { Twitter, Instagram, Facebook } from 'lucide-react';
-import { Logo } from './logo';
 
 export default function Footer() {
   return (
@@ -8,9 +7,7 @@ export default function Footer() {
       <div className="container mx-auto py-12">
         <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
           <div className="flex flex-col items-start">
-             <Link href="/" className="flex items-center mb-2">
-              <Logo className="h-8" />
-            </Link>
+            <span className="font-bold text-xl mb-2">GRINDWEAR STUDIOS</span>
             <p className="text-muted-foreground text-sm">Sustainable style, one piece at a time.</p>
           </div>
           <div className="grid grid-cols-2 gap-8 sm:grid-cols-3 md:col-span-2">

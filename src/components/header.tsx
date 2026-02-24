@@ -15,7 +15,6 @@ import {
   SheetContent,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { Logo } from './logo';
 import { useAuth, useUser } from '@/firebase';
 import { signOut } from 'firebase/auth';
 import {
@@ -53,7 +52,7 @@ export default function Header() {
       <div className="container flex h-16 items-center">
         <div className="mr-4 hidden md:flex">
           <Link href="/" className="mr-6 flex items-center">
-            <Logo className="h-8" />
+            <span className="font-bold text-lg">GRINDWEAR STUDIOS</span>
           </Link>
           <nav className="flex items-center space-x-6 text-sm font-medium">
             {navItems.map((item) => (
@@ -78,7 +77,7 @@ export default function Header() {
             </SheetTrigger>
             <SheetContent side="left">
                <Link href="/" className="mr-6 flex items-center mb-6">
-                <Logo className="h-8" />
+                <span className="font-bold text-lg">GRINDWEAR STUDIOS</span>
               </Link>
               <nav className="flex flex-col space-y-4">
                  {navItems.map((item) => (
