@@ -39,7 +39,11 @@ export default function Footer() {
         </div>
         <div className="mt-8 border-t pt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
             <div className="text-center sm:text-left">
-                <p className="text-sm text-muted-foreground">&copy; {new Date().getFullYear()} Thrift Clothing Plug. All Rights Reserved.</p>
+                <p className="text-sm text-muted-foreground">
+                  <Link href="/admin" className="hover:text-primary transition-colors">
+                    &copy; {new Date().getFullYear()} Thrift Clothing Plug. All Rights Reserved.
+                  </Link>
+                </p>
                 <p className="text-xs text-muted-foreground">Powered by GRINDWEAR STUDIOS</p>
             </div>
            <div className="flex space-x-4">
