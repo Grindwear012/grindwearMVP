@@ -41,7 +41,7 @@ const prompt = ai.definePrompt({
   name: 'productRecommendationsPrompt',
   input: {schema: ProductRecommendationsInputSchema},
   output: {schema: ProductRecommendationsOutputSchema},
-  prompt: `You are an expert fashion stylist specializing in personalized recommendations for a thrift store named "Thrift Clothing Plug".
+  prompt: `You are an expert fashion stylist specializing in personalized recommendations for a thrift store named "GRINDWEAR STUDIOS".
 Your goal is to suggest relevant thrift clothing items to a shopper based on their past browsing activity, general popular items, and their stated preferences.
 
 Consider the following information to generate your recommendations:

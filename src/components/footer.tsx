@@ -41,9 +41,12 @@ export default function Footer() {
             </div>
           </div>
         </div>
-        <div className="mt-8 border-t pt-8 flex flex-col sm:flex-row justify-between items-center">
-          <p className="text-sm text-muted-foreground">&copy; {new Date().getFullYear()} Thrift Plug. All Rights Reserved.</p>
-           <div className="flex space-x-4 mt-4 sm:mt-0">
+        <div className="mt-8 border-t pt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div className="text-center sm:text-left">
+                <p className="text-sm text-muted-foreground">&copy; {new Date().getFullYear()} GRINDWEAR STUDIOS. All Rights Reserved.</p>
+                <p className="text-xs text-muted-foreground">Powered by GRINDWEAR STUDIOS</p>
+            </div>
+           <div className="flex space-x-4">
               <Link href="#" className="text-muted-foreground hover:text-primary"><Twitter className="h-5 w-5" /></Link>
               <Link href="#" className="text-muted-foreground hover:text-primary"><Instagram className="h-5 w-5" /></Link>
               <Link href="#" className="text-muted-foreground hover:text-primary"><Facebook className="h-5 w-5" /></Link>
