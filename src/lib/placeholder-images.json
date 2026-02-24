@@ -59,6 +59,24 @@
       "description": "Front view of a grey graphic hoodie",
       "imageUrl": "https://images.unsplash.com/photo-1760126130341-fa58ff0750eb?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxncmFwaGljJTIwaG9vZGllfGVufDB8fHx8MTc3MTg3Mzc0Mnww&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "graphic hoodie"
+    },
+    {
+      "id": "men-category-hero",
+      "description": "A stylish man posing outdoors",
+      "imageUrl": "https://images.unsplash.com/photo-1620834767726-61b1986287ff?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxtYW4lMjBmYXNoaW9ufGVufDB8fHx8MTc3MTkwMjY1MHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "man fashion"
+    },
+    {
+      "id": "women-category-hero",
+      "description": "A stylish woman posing outdoors",
+      "imageUrl": "https://images.unsplash.com/photo-1609505848912-b7c3b8b4beda?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHx3b21hbiUyMGZhc2hpb258ZW58MHx8fHwxNzcxOTAyNjUwfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "woman fashion"
+    },
+    {
+      "id": "accessories-category-hero",
+      "description": "A collection of fashion accessories",
+      "imageUrl": "https://images.unsplash.com/photo-1492707892479-7bc8d5a4ee93?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxmYXNoaW9uJTIwYWNjZXNzb3JpZXN8ZW58MHx8fHwxNzcxODc0NzA3fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "fashion accessories"
     }
   ]
 }
