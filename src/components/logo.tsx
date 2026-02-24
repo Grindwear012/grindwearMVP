@@ -10,7 +10,7 @@ export function Logo({
       <svg
         role="img"
         aria-label="Thrift Clothing Plug Logo"
-        viewBox="0 0 64 64"
+        viewBox="0 0 64 52"
         xmlns="http://www.w3.org/2000/svg"
         className="h-full w-auto"
       >
@@ -35,19 +35,6 @@ export function Logo({
             fill="white"
           />
         </g>
-        <text
-          x="32"
-          y="60"
-          fontFamily="sans-serif"
-          fontSize="5.5"
-          fontWeight="bold"
-          letterSpacing="0.05em"
-          textAnchor="middle"
-          fill="currentColor"
-          className="text-black"
-        >
-          THRIFT CLOTHING PLUG
-        </text>
       </svg>
     </div>
   );
