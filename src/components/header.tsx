@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import Link from 'next/link';
 import {
@@ -58,8 +58,9 @@ export default function Header() {
               </Button>
             </SheetTrigger>
             <SheetContent side="left" className="w-4/5 p-4">
-               <Link href="/" className="flex items-center mb-8">
+               <Link href="/" className="flex items-center gap-2 mb-8">
                 <Logo className="h-7" />
+                <span className="font-bold">ThriftClothingPlug</span>
               </Link>
               <nav className="flex flex-col gap-4">
                  {[{name: 'Home', href: '/'}, ...navItems].map((item) => (
@@ -78,8 +79,9 @@ export default function Header() {
 
         {/* Left: Logo (Desktop) */}
         <div className="hidden md:flex">
-          <Link href="/" className="flex items-center">
+          <Link href="/" className="flex items-center gap-2">
             <Logo className="h-7" />
+            <span className="font-bold tracking-wider">THRIFTCLOTHINGPLUG</span>
           </Link>
         </div>
 
@@ -97,8 +99,9 @@ export default function Header() {
                 ))}
             </nav>
             <div className="md:hidden">
-                 <Link href="/" className="flex items-center">
+                 <Link href="/" className="flex items-center gap-2">
                     <Logo className="h-7" />
+                    <span className="font-bold">ThriftClothingPlug</span>
                 </Link>
             </div>
         </div>
