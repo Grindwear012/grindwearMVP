@@ -11,6 +11,9 @@ import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
 const ProductRecommendationsInputSchema = z.object({
+  availableProducts: z
+    .array(z.object({ id: z.string(), name: z.string() }))
+    .describe('A list of all available products with their IDs and names.'),
   browsingHistory: z
     .array(z.string())
     .describe('A list of product names or descriptions that the user has previously viewed.'),
@@ -25,9 +28,9 @@ const ProductRecommendationsInputSchema = z.object({
 export type ProductRecommendationsInput = z.infer<typeof ProductRecommendationsInputSchema>;
 
 const ProductRecommendationsOutputSchema = z.object({
-  recommendations: z
+  productIds: z
     .array(z.string())
-    .describe('A list of personalized thrift clothing item recommendations.'),
+    .describe('A list of up to 4 product IDs for the recommended items. These IDs must be from the provided availableProducts list.'),
 });
 export type ProductRecommendationsOutput = z.infer<typeof ProductRecommendationsOutputSchema>;
 
@@ -43,6 +46,11 @@ const prompt = ai.definePrompt({
   output: {schema: ProductRecommendationsOutputSchema},
   prompt: `You are an expert fashion stylist specializing in personalized recommendations for a thrift store named "Thrift Clothing Plug".
 Your goal is to suggest relevant thrift clothing items to a shopper based on their past browsing activity, general popular items, and their stated preferences.
+
+Here is the list of all available products you can choose from:
+{{#each availableProducts}}
+  - ID: {{{this.id}}}, Name: {{{this.name}}}
+{{/each}}
 
 Consider the following information to generate your recommendations:
 
@@ -71,7 +79,7 @@ User preferences (if provided):
   (No specific preferences provided)
 {{/if}}
 
-Based on the above, please provide a list of up to 5 personalized thrift clothing recommendations. Each recommendation should be a unique item.`,
+Based on the above, please provide a list of up to 4 product IDs for personalized thrift clothing recommendations. The IDs must be selected from the list of available products.`,
 });
 
 const productRecommendationsFlow = ai.defineFlow(
