@@ -11,7 +11,7 @@ import { FirebaseClientProvider } from '@/firebase/client-provider';
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
 
 export const metadata: Metadata = {
-  title: 'GRINDWEAR STUDIOS',
+  title: 'Thrift Clothing Plug',
   description: 'Your one-stop shop for curated thrift clothing.',
 };
 
