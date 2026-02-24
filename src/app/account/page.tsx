@@ -43,8 +43,8 @@ export default function AccountPage() {
 
 
   const mockOrders = [
-    { id: 'ORD001', date: '2023-10-26', total: '$120.00', status: 'Shipped' },
-    { id: 'ORD002', date: '2023-10-20', total: '$45.00', status: 'Delivered' },
+    { id: 'ORD001', date: '2023-10-26', total: 'R120.00', status: 'Shipped' },
+    { id: 'ORD002', date: '2023-10-20', total: 'R45.00', status: 'Delivered' },
   ];
 
   return (

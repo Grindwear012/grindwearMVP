@@ -18,11 +18,11 @@ import { Button } from '@/components/ui/button';
 
 export default function AdminOrdersPage() {
     const mockOrders = [
-        { id: 'ORD001', date: '2023-10-26', customer: 'John Doe', total: '$120.00', status: 'Shipped' },
-        { id: 'ORD002', date: '2023-10-25', customer: 'Jane Smith', total: '$45.00', status: 'Processing' },
-        { id: 'ORD003', date: '2023-10-25', customer: 'Peter Jones', total: '$75.50', status: 'Delivered' },
-        { id: 'ORD004', date: '2023-10-24', customer: 'Mary Johnson', total: '$210.00', status: 'Shipped' },
-        { id: 'ORD005', date: '2023-10-23', customer: 'Chris Lee', total: '$60.00', status: 'Cancelled' },
+        { id: 'ORD001', date: '2023-10-26', customer: 'John Doe', total: 'R120.00', status: 'Shipped' },
+        { id: 'ORD002', date: '2023-10-25', customer: 'Jane Smith', total: 'R45.00', status: 'Processing' },
+        { id: 'ORD003', date: '2023-10-25', customer: 'Peter Jones', total: 'R75.50', status: 'Delivered' },
+        { id: 'ORD004', date: '2023-10-24', customer: 'Mary Johnson', total: 'R210.00', status: 'Shipped' },
+        { id: 'ORD005', date: '2023-10-23', customer: 'Chris Lee', total: 'R60.00', status: 'Cancelled' },
     ];
 
     const getStatusVariant = (status: string) => {

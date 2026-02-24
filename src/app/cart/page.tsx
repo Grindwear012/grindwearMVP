@@ -59,10 +59,10 @@ export default function CartPage() {
                         <p>Size: {item.size}</p>
                         <p>Color: {item.color}</p>
                       </div>
-                      <p className="mt-1 font-medium md:hidden">${item.product.price.toFixed(2)}</p>
+                      <p className="mt-1 font-medium md:hidden">R{item.product.price.toFixed(2)}</p>
                     </div>
                     <div className="hidden items-center gap-4 md:flex">
-                       <p className="w-20 font-medium">${item.product.price.toFixed(2)}</p>
+                       <p className="w-20 font-medium">R{item.product.price.toFixed(2)}</p>
                        <Input
                         type="number"
                         min="1"
@@ -96,16 +96,16 @@ export default function CartPage() {
             <CardContent className="space-y-4">
               <div className="flex justify-between">
                 <span>Subtotal</span>
-                <span>${totalPrice.toFixed(2)}</span>
+                <span>R{totalPrice.toFixed(2)}</span>
               </div>
               <div className="flex justify-between">
                 <span>Shipping</span>
-                <span>$5.00</span>
+                <span>R5.00</span>
               </div>
               <Separator />
               <div className="flex justify-between font-bold">
                 <span>Total</span>
-                <span>${(totalPrice + 5).toFixed(2)}</span>
+                <span>R{(totalPrice + 5).toFixed(2)}</span>
               </div>
             </CardContent>
             <CardFooter>

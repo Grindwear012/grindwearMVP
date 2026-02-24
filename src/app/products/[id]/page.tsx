@@ -61,7 +61,7 @@ export default function ProductPage({ params }: { params: { id: string } }) {
           <h1 className="mt-2 text-3xl font-bold tracking-tight lg:text-4xl">
             {product.name}
           </h1>
-          <p className="mt-4 text-3xl font-semibold">${product.price.toFixed(2)}</p>
+          <p className="mt-4 text-3xl font-semibold">R{product.price.toFixed(2)}</p>
           <Separator className="my-6" />
           <p className="text-base text-muted-foreground">
             {product.longDescription}
