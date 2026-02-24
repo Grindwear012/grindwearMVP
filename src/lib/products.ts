@@ -92,6 +92,30 @@ const products: Product[] = [
     sizes: ['S', 'M', 'L'],
     colors: ['Heather Grey'],
   },
+  {
+    id: 'high-waist-mom-jeans',
+    name: 'High-Waist Mom Jeans',
+    description: 'A stylish and comfortable pair of mom jeans.',
+    longDescription:
+      'These high-waist mom jeans offer a relaxed fit through the thigh and a tapered leg. Made from sturdy, non-stretch denim, they provide a classic vintage look that pairs well with any top. A versatile staple for your wardrobe.',
+    price: 68.0,
+    images: [getImage('high-waist-jeans-1')],
+    category: 'Women',
+    sizes: ['25', '26', '27', '28'],
+    colors: ['Light Wash'],
+  },
+  {
+    id: 'bohemian-blouse',
+    name: 'Bohemian Blouse',
+    description: 'An embroidered blouse with a bohemian vibe.',
+    longDescription:
+      'This beautiful bohemian blouse features intricate embroidery and a relaxed, flowy fit. The lightweight cotton fabric makes it perfect for warmer weather, while the tassel-tie neckline adds a touch of playful detail. Pair it with jeans or a skirt for an effortless, chic look.',
+    price: 52.0,
+    images: [getImage('boho-blouse-1')],
+    category: 'Women',
+    sizes: ['S', 'M', 'L'],
+    colors: ['Ivory'],
+  },
 ];
 
 export function getProducts() {
@@ -101,3 +125,5 @@ export function getProducts() {
 export function getProduct(id: string) {
   return products.find((p) => p.id === id);
 }
+
+    

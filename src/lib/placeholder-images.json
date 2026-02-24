@@ -61,6 +61,18 @@
       "imageHint": "graphic hoodie"
     },
     {
+      "id": "high-waist-jeans-1",
+      "description": "A woman wearing stylish high-waisted jeans",
+      "imageUrl": "https://images.unsplash.com/photo-1541233484322-8d139ab0059a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxoaWdoJTIwd2Fpc3QlMjBqZWFuc3xlbnwwfHx8fDE3NzE5MDQ0NTZ8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "high-waist jeans"
+    },
+    {
+      "id": "boho-blouse-1",
+      "description": "A flowy bohemian-style blouse",
+      "imageUrl": "https://images.unsplash.com/photo-1593982462370-13d04735c053?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxib2hvJTIwYmxvdXNlfGVufDB8fHx8MTc3MTkwNDUwNnww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "boho blouse"
+    },
+    {
       "id": "men-category-hero",
       "description": "A stylish man posing outdoors",
       "imageUrl": "https://images.unsplash.com/photo-1620834767726-61b1986287ff?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxtYW4lMjBmYXNoaW9ufGVufDB8fHx8MTc3MTkwMjY1MHww&ixlib=rb-4.1.0&q=80&w=1080",
