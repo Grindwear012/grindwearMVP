@@ -4,19 +4,31 @@ import { useState } from 'react';
 import type { Product } from '@/lib/types';
 import { useCart } from '@/hooks/use-cart';
 import { Button } from '@/components/ui/button';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { ShoppingCart } from 'lucide-react';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { cn } from '@/lib/utils';
 
 interface AddToCartFormProps {
   product: Product;
 }
+
+// Helper to map color names to Tailwind CSS classes
+const colorNameToClass = (colorName: string): string => {
+  const mapping: { [key: string]: string } = {
+    'Faded Black': 'bg-gray-800',
+    'Medium Wash': 'bg-blue-600',
+    'Yellow Floral': 'bg-yellow-400',
+    'Brown': 'bg-stone-800',
+    'Red Plaid': 'bg-red-700',
+    'Distressed Brown': 'bg-amber-900',
+    'Heather Grey': 'bg-gray-400',
+    'Light Wash': 'bg-blue-400',
+    'Ivory': 'bg-stone-100 border',
+  };
+  return mapping[colorName] || 'bg-gray-500';
+};
+
 
 export default function AddToCartForm({ product }: AddToCartFormProps) {
   const { addToCart } = useCart();
@@ -29,36 +41,53 @@ export default function AddToCartForm({ product }: AddToCartFormProps) {
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-2 gap-4">
+      <div className="space-y-4">
         <div>
-          <Label htmlFor="size-select">Size</Label>
-          <Select value={selectedSize} onValueChange={setSelectedSize}>
-            <SelectTrigger id="size-select">
-              <SelectValue placeholder="Select size" />
-            </SelectTrigger>
-            <SelectContent>
-              {product.sizes.map((size) => (
-                <SelectItem key={size} value={size}>
+          <Label className="text-base font-medium">Size</Label>
+          <RadioGroup
+            value={selectedSize}
+            onValueChange={setSelectedSize}
+            className="mt-2 flex flex-wrap items-center gap-2"
+          >
+            {product.sizes.map((size) => (
+              <div key={size}>
+                <RadioGroupItem value={size} id={`size-${size}`} className="peer sr-only" />
+                <Label
+                  htmlFor={`size-${size}`}
+                  className={cn(
+                    'flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border text-sm font-medium uppercase transition-colors',
+                    'peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary peer-data-[state=checked]:text-primary-foreground',
+                    'hover:bg-accent hover:text-accent-foreground'
+                  )}
+                >
                   {size}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+                </Label>
+              </div>
+            ))}
+          </RadioGroup>
         </div>
         <div>
-          <Label htmlFor="color-select">Color</Label>
-          <Select value={selectedColor} onValueChange={setSelectedColor}>
-            <SelectTrigger id="color-select">
-              <SelectValue placeholder="Select color" />
-            </SelectTrigger>
-            <SelectContent>
-              {product.colors.map((color) => (
-                <SelectItem key={color} value={color}>
-                  {color}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Label className="text-base font-medium">Color</Label>
+           <RadioGroup
+            value={selectedColor}
+            onValueChange={setSelectedColor}
+            className="mt-2 flex flex-wrap items-center gap-3"
+          >
+            {product.colors.map((color) => (
+              <div key={color}>
+                <RadioGroupItem value={color} id={`color-${color}`} className="peer sr-only" />
+                <Label
+                  htmlFor={`color-${color}`}
+                  title={color}
+                  className={cn(
+                    'flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-2 transition-colors',
+                    colorNameToClass(color),
+                    'peer-data-[state=checked]:ring-2 peer-data-[state=checked]:ring-ring peer-data-[state=checked]:ring-offset-2'
+                  )}
+                />
+              </div>
+            ))}
+          </RadioGroup>
         </div>
       </div>
       <Button size="lg" className="w-full" onClick={handleAddToCart}>
