@@ -1,0 +1,634 @@
+{
+  "entities": {
+    "Customer": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Customer",
+      "type": "object",
+      "description": "Represents a registered user of the Thrift Plug e-commerce store, managing their account and interactions.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Customer entity."
+        },
+        "email": {
+          "type": "string",
+          "description": "The customer's email address, used for communication and login.",
+          "format": "email"
+        },
+        "firstName": {
+          "type": "string",
+          "description": "The first name of the customer."
+        },
+        "lastName": {
+          "type": "string",
+          "description": "The last name of the customer."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the customer account was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp when the customer account was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "email",
+        "firstName",
+        "lastName",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "Address": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Address",
+      "type": "object",
+      "description": "Stores physical address details for shipping and billing purposes.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Address entity."
+        },
+        "customerId": {
+          "type": "string",
+          "description": "Reference to the Customer who owns this address. (Relationship: Customer 1:N Address)"
+        },
+        "street1": {
+          "type": "string",
+          "description": "The primary street address line."
+        },
+        "street2": {
+          "type": "string",
+          "description": "The secondary street address line (e.g., apartment, suite number)."
+        },
+        "city": {
+          "type": "string",
+          "description": "The city of the address."
+        },
+        "state": {
+          "type": "string",
+          "description": "The state, province, or region of the address."
+        },
+        "zipCode": {
+          "type": "string",
+          "description": "The postal or zip code of the address."
+        },
+        "country": {
+          "type": "string",
+          "description": "The country of the address."
+        },
+        "label": {
+          "type": "string",
+          "description": "A descriptive label for the address (e.g., 'Home', 'Work')."
+        },
+        "isDefaultShipping": {
+          "type": "boolean",
+          "description": "Indicates if this is the customer's default shipping address."
+        },
+        "isDefaultBilling": {
+          "type": "boolean",
+          "description": "Indicates if this is the customer's default billing address."
+        }
+      },
+      "required": [
+        "id",
+        "customerId",
+        "street1",
+        "city",
+        "state",
+        "zipCode",
+        "country",
+        "label",
+        "isDefaultShipping",
+        "isDefaultBilling"
+      ]
+    },
+    "Category": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Category",
+      "type": "object",
+      "description": "Represents a classification for products, helping to organize the store's inventory.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Category entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the product category (e.g., 'Tops', 'Bottoms', 'Accessories')."
+        },
+        "description": {
+          "type": "string",
+          "description": "A brief description of the category."
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "description"
+      ]
+    },
+    "Product": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Product",
+      "type": "object",
+      "description": "Represents a single item of thrift clothing available for sale in the store.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Product entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the clothing item."
+        },
+        "description": {
+          "type": "string",
+          "description": "A detailed description of the product, including material, style, and unique features."
+        },
+        "price": {
+          "type": "number",
+          "description": "The selling price of the product."
+        },
+        "categoryId": {
+          "type": "string",
+          "description": "Reference to the category this product belongs to. (Relationship: Category 1:N Product)"
+        },
+        "brand": {
+          "type": "string",
+          "description": "The brand of the clothing item."
+        },
+        "size": {
+          "type": "string",
+          "description": "The size of the clothing item (e.g., 'S', 'M', 'L', 'One Size')."
+        },
+        "condition": {
+          "type": "string",
+          "description": "The condition of the thrift item (e.g., 'New', 'Like New', 'Good', 'Fair')."
+        },
+        "material": {
+          "type": "string",
+          "description": "The primary material of the clothing item (e.g., 'Cotton', 'Polyester')."
+        },
+        "color": {
+          "type": "string",
+          "description": "The color of the clothing item."
+        },
+        "images": {
+          "type": "array",
+          "description": "An array of URLs for images of the product.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "stockQuantity": {
+          "type": "number",
+          "description": "The number of units of this product currently in stock."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the product was added to the inventory.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp when the product information was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "description",
+        "price",
+        "categoryId",
+        "brand",
+        "size",
+        "condition",
+        "images",
+        "stockQuantity",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "Cart": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Cart",
+      "type": "object",
+      "description": "Represents a customer's current shopping cart, holding items intended for purchase.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Cart entity."
+        },
+        "customerId": {
+          "type": "string",
+          "description": "Reference to the Customer who owns this cart. (Relationship: Customer 1:1 Cart)"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Timestamp when the cart was created.",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp when the cart was last updated (e.g., item added/removed).",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "customerId",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "CartItem": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "CartItem",
+      "type": "object",
+      "description": "Represents a specific product and its quantity within a customer's shopping cart.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the CartItem entity."
+        },
+        "cartId": {
+          "type": "string",
+          "description": "Reference to the Cart this item belongs to. (Relationship: Cart 1:N CartItem)"
+        },
+        "productId": {
+          "type": "string",
+          "description": "Reference to the Product added to the cart. (Relationship: Product 1:N CartItem)"
+        },
+        "quantity": {
+          "type": "number",
+          "description": "The number of units of the product in the cart."
+        },
+        "priceAtAddition": {
+          "type": "number",
+          "description": "The price of the product at the time it was added to the cart, for historical accuracy."
+        }
+      },
+      "required": [
+        "id",
+        "cartId",
+        "productId",
+        "quantity",
+        "priceAtAddition"
+      ]
+    },
+    "Order": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Order",
+      "type": "object",
+      "description": "Represents a completed purchase transaction by a customer.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Order entity."
+        },
+        "customerId": {
+          "type": "string",
+          "description": "Reference to the Customer who placed this order. (Relationship: Customer 1:N Order)"
+        },
+        "orderDate": {
+          "type": "string",
+          "description": "Timestamp when the order was placed.",
+          "format": "date-time"
+        },
+        "totalAmount": {
+          "type": "number",
+          "description": "The total monetary amount of the order, including shipping and taxes."
+        },
+        "status": {
+          "type": "string",
+          "description": "The current status of the order (e.g., 'Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled')."
+        },
+        "shippingAddressId": {
+          "type": "string",
+          "description": "Reference to the Address used for shipping this order. (Relationship: Address 1:N Order)"
+        },
+        "billingAddressId": {
+          "type": "string",
+          "description": "Reference to the Address used for billing this order. (Relationship: Address 1:N Order)"
+        },
+        "paymentMethodId": {
+          "type": "string",
+          "description": "Reference to the PaymentMethod used for this order, if a saved method was selected. (Relationship: PaymentMethod 1:N Order)"
+        },
+        "shippingCost": {
+          "type": "number",
+          "description": "The cost charged for shipping this order."
+        },
+        "taxAmount": {
+          "type": "number",
+          "description": "The amount of tax applied to this order."
+        }
+      },
+      "required": [
+        "id",
+        "customerId",
+        "orderDate",
+        "totalAmount",
+        "status",
+        "shippingAddressId",
+        "billingAddressId",
+        "shippingCost",
+        "taxAmount"
+      ]
+    },
+    "OrderItem": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "OrderItem",
+      "type": "object",
+      "description": "Represents a specific product and its purchased details as part of an order.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the OrderItem entity."
+        },
+        "orderId": {
+          "type": "string",
+          "description": "Reference to the Order this item belongs to. (Relationship: Order 1:N OrderItem)"
+        },
+        "productId": {
+          "type": "string",
+          "description": "Reference to the Product included in this order item. (Relationship: Product 1:N OrderItem)"
+        },
+        "quantity": {
+          "type": "number",
+          "description": "The number of units of the product purchased."
+        },
+        "priceAtPurchase": {
+          "type": "number",
+          "description": "The price of the product at the time of purchase, for historical accuracy."
+        }
+      },
+      "required": [
+        "id",
+        "orderId",
+        "productId",
+        "quantity",
+        "priceAtPurchase"
+      ]
+    },
+    "PaymentMethod": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "PaymentMethod",
+      "type": "object",
+      "description": "Stores non-sensitive details of a customer's saved payment method, relying on an external system for sensitive data.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the PaymentMethod entity."
+        },
+        "customerId": {
+          "type": "string",
+          "description": "Reference to the Customer who owns this payment method. (Relationship: Customer 1:N PaymentMethod)"
+        },
+        "type": {
+          "type": "string",
+          "description": "The type of payment method (e.g., 'Credit Card', 'PayPal', 'Apple Pay')."
+        },
+        "lastFourDigits": {
+          "type": "string",
+          "description": "The last four digits of the credit card number, for display purposes."
+        },
+        "expirationMonth": {
+          "type": "number",
+          "description": "The expiration month of the credit card (1-12)."
+        },
+        "expirationYear": {
+          "type": "number",
+          "description": "The four-digit expiration year of the credit card."
+        },
+        "cardBrand": {
+          "type": "string",
+          "description": "The brand of the credit card (e.g., 'Visa', 'Mastercard', 'American Express')."
+        },
+        "billingAddressId": {
+          "type": "string",
+          "description": "Reference to the Address associated with this payment method for billing. (Relationship: Address 1:N PaymentMethod)"
+        },
+        "isDefault": {
+          "type": "boolean",
+          "description": "Indicates if this is the customer's default payment method."
+        }
+      },
+      "required": [
+        "id",
+        "customerId",
+        "type",
+        "isDefault"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "Customer",
+          "schema": {
+            "$ref": "#/backend/entities/Customer"
+          },
+          "description": "Represents a customer's profile. The document ID (`userId`) must match the Firebase Authentication UID of the logged-in user. This provides path-based ownership for all customer-specific data.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the customer, matching their Firebase Authentication UID."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/addresses/{addressId}",
+        "definition": {
+          "entityName": "Address",
+          "schema": {
+            "$ref": "#/backend/entities/Address"
+          },
+          "description": "Stores physical addresses for a specific customer. The `customerId` field within the Address document implicitly matches the `userId` in the path, ensuring authorization independence.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the customer who owns this address."
+            },
+            {
+              "name": "addressId",
+              "description": "The unique identifier for the specific address."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/paymentMethods/{paymentMethodId}",
+        "definition": {
+          "entityName": "PaymentMethod",
+          "schema": {
+            "$ref": "#/backend/entities/PaymentMethod"
+          },
+          "description": "Stores non-sensitive payment method details for a specific customer. The `customerId` field within the PaymentMethod document implicitly matches the `userId` in the path, ensuring authorization independence.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the customer who owns this payment method."
+            },
+            {
+              "name": "paymentMethodId",
+              "description": "The unique identifier for the specific payment method."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/carts/{cartId}",
+        "definition": {
+          "entityName": "Cart",
+          "schema": {
+            "$ref": "#/backend/entities/Cart"
+          },
+          "description": "Represents a customer's current shopping cart. To maintain the 1:1 relationship with Customer, the `cartId` for a customer's primary cart should match their `userId`. The `customerId` field within the Cart document implicitly matches the `userId` in the path, ensuring authorization independence.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the customer who owns this cart."
+            },
+            {
+              "name": "cartId",
+              "description": "The unique identifier for the cart (expected to match `userId` for the primary cart)."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/carts/{cartId}/cartItems/{cartItemId}",
+        "definition": {
+          "entityName": "CartItem",
+          "schema": {
+            "$ref": "#/backend/entities/CartItem"
+          },
+          "description": "Represents a product item within a specific cart. Includes denormalized 'customerId' (matching the parent `userId`) and 'cartId' (matching the parent `cartId`) for authorization independence and simplified rules.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the customer who owns the cart."
+            },
+            {
+              "name": "cartId",
+              "description": "The unique identifier of the parent cart."
+            },
+            {
+              "name": "cartItemId",
+              "description": "The unique identifier for the specific item in the cart."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/orders/{orderId}",
+        "definition": {
+          "entityName": "Order",
+          "schema": {
+            "$ref": "#/backend/entities/Order"
+          },
+          "description": "Represents a completed purchase transaction by a customer. The `customerId` field within the Order document implicitly matches the `userId` in the path, ensuring authorization independence.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the customer who placed this order."
+            },
+            {
+              "name": "orderId",
+              "description": "The unique identifier for the specific order."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/orders/{orderId}/orderItems/{orderItemId}",
+        "definition": {
+          "entityName": "OrderItem",
+          "schema": {
+            "$ref": "#/backend/entities/OrderItem"
+          },
+          "description": "Represents a product item within a specific order. Includes denormalized 'customerId' (matching the parent `userId`) and 'orderId' (matching the parent `orderId`) for authorization independence and simplified rules.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the customer who placed the order."
+            },
+            {
+              "name": "orderId",
+              "description": "The unique identifier of the parent order."
+            },
+            {
+              "name": "orderItemId",
+              "description": "The unique identifier for the specific item in the order."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/categories/{categoryId}",
+        "definition": {
+          "entityName": "Category",
+          "schema": {
+            "$ref": "#/backend/entities/Category"
+          },
+          "description": "A top-level collection for publicly accessible product categories. This data is read-only for general users and managed by administrators.",
+          "params": [
+            {
+              "name": "categoryId",
+              "description": "The unique identifier for a product category."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/products/{productId}",
+        "definition": {
+          "entityName": "Product",
+          "schema": {
+            "$ref": "#/backend/entities/Product"
+          },
+          "description": "A top-level collection for publicly accessible product listings. This data is read-only for general users and managed by administrators.",
+          "params": [
+            {
+              "name": "productId",
+              "description": "The unique identifier for a product."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/roles_admin/{adminId}",
+        "definition": {
+          "entityName": "AdminRole",
+          "schema": {
+            "$ref": "#/backend/entities/AdminRole"
+          },
+          "description": "A top-level collection used for Database-Backed Access Control (DBAC) to identify administrators. The existence of a document at `/roles_admin/{adminId}` where `adminId` matches a user's UID grants administrative privileges. This avoids custom claims.",
+          "params": [
+            {
+              "name": "adminId",
+              "description": "The unique identifier of the administrator, matching their user UID."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore structure for Thrift Plug prioritizes secure, scalable, and debuggable authorization by strictly adhering to the core design principles. \n\n**Authorization Independence via Denormalization:**\nFor all user-specific data (Customer, Address, PaymentMethod, Cart, Order, CartItem, OrderItem), authorization is made independent of `get()` calls in security rules. This is achieved primarily through path-based ownership. For example, a customer's addresses are stored under `/users/{userId}/addresses/{addressId}`. The `{userId}` wildcard directly maps to `request.auth.uid`, making rules simple and atomic: `allow read, write: if request.auth.uid == userId;` without needing to fetch a parent document to verify ownership. \n\nCrucially, for nested data like `CartItem` and `OrderItem`, the parent's owner (`customerId`) is denormalized directly into the `CartItem` and `OrderItem` documents themselves. While the path `/users/{userId}/carts/{cartId}/cartItems/{cartItemId}` already contains the `userId`, explicitly storing `customerId` within the `CartItem` document (`resource.data.customerId`) ensures that a rule can always check `request.auth.uid == resource.data.customerId` without any reliance on checking parent documents or performing complex hierarchical lookups. This allows for atomic writes and simplifies batch operations where the parent might not exist yet, or where multiple related writes are happening.\n\n**Structural Segregation for Homogeneous Security Posture:**\nData is segregated based on its security requirements. Publicly accessible information like `Categories` and `Products` are placed in top-level collections (`/categories`, `/products`) allowing for simple `read: true` rules. Private, user-specific data is always nested under a `userId` path (`/users/{userId}/...`). This clear segregation prevents mixing different access levels within the same collection, simplifying security rules significantly.\n\n**Access Modeling for Consistency:**\n*   **Private Data:** The `/users/{userId}` document and its subcollections (`addresses`, `paymentMethods`, `carts`, `orders`) enforce path-based ownership, where `{userId}` must match `request.auth.uid`.\n*   **Hierarchical Paths:** Relationships like Customer 1:N Address are modeled as subcollections: `/users/{userId}/addresses/{addressId}`.\n*   **Nested Hierarchy:** Deeper relationships like Cart 1:N CartItem continue this pattern: `/users/{userId}/carts/{cartId}/cartItems/{cartItemId}`.\n*   **Global Roles (DBAC):** An explicit `/roles_admin/{adminId}` collection is used for database-backed access control. The mere existence of a document with the user's UID in this collection grants admin privileges, avoiding custom claims.\n\n**QAPs (Rules are not Filters):**\nThe structure supports efficient `list` operations. Public collections (`/categories`, `/products`) allow `list` without filtering needs. For user-specific data, rules like `allow read: if request.auth.uid == userId;` ensure that any `list` query must implicitly or explicitly filter by the authenticated user's ID. For example, a query to `/users/{request.auth.uid}/orders` automatically adheres to the rule, as `userId` matches `request.auth.uid`. If a user attempts to query another user's data, the rule fails at the path level, preventing unauthorized access before data is even considered.\n\nBy following these principles, the Thrift Plug Firestore structure is robust, easy to secure with clear rules, and highly performant."
+  }
+}
