@@ -6,9 +6,9 @@ import {
   ShoppingCart,
   User,
   Menu,
+  Heart,
 } from 'lucide-react';
 import { Button } from './ui/button';
-import { Input } from './ui/input';
 import { useCart } from '@/hooks/use-cart';
 import {
   Sheet,
@@ -35,7 +35,6 @@ export default function Header() {
   const router = useRouter();
 
   const navItems = [
-    { name: 'Home', href: '/' },
     { name: 'Men', href: '/products?category=Men' },
     { name: 'Women', href: '/products?category=Women' },
     { name: 'Accessories', href: '/products?category=Accessories' },
@@ -48,43 +47,26 @@ export default function Header() {
 
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-card">
+    <header className="sticky top-0 z-50 w-full border-b bg-background">
       <div className="container flex h-16 items-center">
-        <div className="mr-4 hidden md:flex">
-          <Link href="/" className="mr-6 flex items-center">
-            <Logo className="h-12" />
-          </Link>
-          <nav className="flex items-center space-x-6 text-sm font-medium">
-            {navItems.map((item) => (
-              <Link
-                key={item.name}
-                href={item.href}
-                className="transition-colors hover:text-foreground/80 text-foreground/60"
-              >
-                {item.name}
-              </Link>
-            ))}
-          </nav>
-        </div>
-        
+        {/* Mobile Menu Trigger */}
         <div className="md:hidden">
-           <Sheet>
+          <Sheet>
             <SheetTrigger asChild>
               <Button variant="ghost" size="icon">
                 <Menu className="h-6 w-6" />
-                <span className="sr-only">Toggle Menu</span>
               </Button>
             </SheetTrigger>
-            <SheetContent side="left">
-               <Link href="/" className="mr-6 flex items-center mb-6">
-                <Logo className="h-12" />
+            <SheetContent side="left" className="w-4/5 p-4">
+               <Link href="/" className="flex items-center mb-8">
+                <Logo className="h-7" />
               </Link>
-              <nav className="flex flex-col space-y-4">
-                 {navItems.map((item) => (
+              <nav className="flex flex-col gap-4">
+                 {[{name: 'Home', href: '/'}, ...navItems].map((item) => (
                   <Link
                     key={item.name}
                     href={item.href}
-                    className="transition-colors hover:text-foreground/80 text-foreground/60"
+                    className="text-lg font-medium transition-colors hover:text-foreground text-foreground/80"
                   >
                     {item.name}
                   </Link>
@@ -94,66 +76,75 @@ export default function Header() {
           </Sheet>
         </div>
 
+        {/* Left: Logo (Desktop) */}
+        <div className="hidden md:flex">
+          <Link href="/" className="flex items-center">
+            <Logo className="h-7" />
+          </Link>
+        </div>
 
-        <div className="flex flex-1 items-center justify-end space-x-2">
-          <div className="w-full flex-1 sm:w-auto sm:flex-none">
-            <form>
-              <div className="relative">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  type="search"
-                  placeholder="Search products..."
-                  className="w-full bg-background pl-9 sm:w-64"
-                />
-              </div>
-            </form>
-          </div>
-          <nav className="flex items-center space-x-2">
-             {isUserLoading ? (
-              <div className="h-8 w-8 rounded-full bg-muted animate-pulse" />
-            ) : user ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon">
-                    <User className="h-5 w-5" />
-                    <span className="sr-only">Account</span>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
+        {/* Center: Navigation (Desktop) / Logo (Mobile) */}
+        <div className="flex flex-1 items-center justify-center">
+            <nav className="hidden md:flex items-center space-x-6 text-sm font-medium tracking-wider">
+                {navItems.map((item) => (
+                <Link
+                    key={item.name}
+                    href={item.href}
+                    className="transition-colors hover:text-foreground text-foreground/70"
+                >
+                    {item.name.toUpperCase()}
+                </Link>
+                ))}
+            </nav>
+            <div className="md:hidden">
+                 <Link href="/" className="flex items-center">
+                    <Logo className="h-7" />
+                </Link>
+            </div>
+        </div>
+
+        {/* Right: Icons */}
+        <div className="flex items-center space-x-1">
+          <Button variant="ghost" size="icon">
+            <Search className="h-5 w-5" />
+            <span className="sr-only">Search</span>
+          </Button>
+          
+          <Button variant="ghost" size="icon" className="hidden md:flex">
+            <Heart className="h-5 w-5" />
+            <span className="sr-only">Wishlist</span>
+          </Button>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon">
+                <User className="h-5 w-5" />
+                <span className="sr-only">Account</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {isUserLoading ? (
+                 <DropdownMenuItem>Loading...</DropdownMenuItem>
+              ) : user ? (
+                <>
                   <DropdownMenuLabel>My Account</DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
-                    <Link href="/account">Profile</Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/account">Orders</Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleSignOut}>
-                    Sign Out
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            ) : (
-              <Link href="/login">
-                <Button variant="ghost" size="icon">
-                  <User className="h-5 w-5" />
-                  <span className="sr-only">Login</span>
-                </Button>
-              </Link>
-            )}
-            <Link href="/cart">
-              <Button variant="ghost" size="icon" className="relative">
-                <ShoppingCart className="h-5 w-5" />
-                {cartCount > 0 && (
-                  <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">
-                    {cartCount}
-                  </span>
-                )}
-                <span className="sr-only">Cart</span>
-              </Button>
-            </Link>
-          </nav>
+                  <DropdownMenuItem asChild><Link href="/account">Profile</Link></DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleSignOut}>Sign Out</DropdownMenuItem>
+                </>
+              ) : (
+                <DropdownMenuItem asChild><Link href="/login">Sign In</Link></DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          <Link href="/cart">
+            <Button variant="ghost" size="icon" className="relative">
+              <ShoppingCart className="h-5 w-5" />
+              <span className="sr-only">Cart</span>
+              {cartCount > 0 && <div className="absolute -right-1 -top-1 w-4 h-4 text-xs rounded-full bg-primary text-primary-foreground flex items-center justify-center">{cartCount}</div>}
+            </Button>
+          </Link>
         </div>
       </div>
     </header>

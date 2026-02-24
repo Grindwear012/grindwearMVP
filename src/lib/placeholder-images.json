@@ -1,6 +1,24 @@
 {
   "placeholderImages": [
     {
+      "id": "hero-model",
+      "description": "Model wearing a grey hoodie and sweatpants",
+      "imageUrl": "https://images.unsplash.com/photo-1635650804060-bb009bcb2ea5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxtYW4lMjBzdHJlZXR3ZWFyfGVufDB8fHx8MTc3MTkwNTQ3M3ww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "man streetwear"
+    },
+    {
+      "id": "collection-men",
+      "description": "Close up of a dark grey sweatshirt",
+      "imageUrl": "https://images.unsplash.com/photo-1635130579917-8f14ed3c0b16?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8Z3JleSUyMHN3ZWF0c2hpcnR8ZW58MHx8fHwxNzcxOTA1NDcyfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "grey sweatshirt"
+    },
+    {
+      "id": "collection-women",
+      "description": "Model wearing grey shorts and sweatshirt",
+      "imageUrl": "https://images.unsplash.com/photo-1553548901-399e21d5c183?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHx3b21hbiUyMHN0cmVldHdlYXJ8ZW58MHx8fHwxNzcxOTA1NDcyfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "woman streetwear"
+    },
+    {
       "id": "vintage-tee-1",
       "description": "Front view of a vintage band t-shirt",
       "imageUrl": "https://images.unsplash.com/photo-1765477619742-0aed953e6f78?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHx2aW50YWdlJTIwdC1zaGlydHxlbnwwfHx8fDE3NzE4NzgzMTF8MA&ixlib=rb-4.1.0&q=80&w=1080",
