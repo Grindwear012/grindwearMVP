@@ -73,7 +73,7 @@ export default function ProductsPage() {
             <Input
               type="search"
               placeholder="Search our collection..."
-              className="max-w-sm"
+              className="max-w-xs"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
