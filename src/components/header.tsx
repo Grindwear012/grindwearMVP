@@ -18,6 +18,7 @@ import { useRouter } from 'next/navigation';
 import { Logo } from './logo';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from './ui/sheet';
 import { useState } from 'react';
+import ClientOnly from './client-only';
 
 const navLinks = [
   { href: '/products?category=Men', label: 'Men' },
@@ -95,9 +96,11 @@ export default function Header() {
 
         {/* Center Section */}
         <div className="flex flex-none items-center justify-center">
-          <p className="font-anton text-lg italic tracking-wider sm:text-xl">
-            THRIFT CLOTHING PLUG
-          </p>
+          <ClientOnly>
+            <p className="font-anton text-lg italic tracking-wider sm:text-xl">
+              THRIFT CLOTHING PLUG
+            </p>
+          </ClientOnly>
         </div>
 
         {/* Right Section */}
