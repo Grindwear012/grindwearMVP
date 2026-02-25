@@ -62,7 +62,7 @@ export default function Header() {
         </div>
 
         <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-          <p className="hidden font-anton text-xl italic tracking-wider md:block">
+          <p className="font-anton text-xl italic tracking-wider">
             THRIFT STORE CLOTHING
           </p>
         </div>
