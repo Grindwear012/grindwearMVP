@@ -11,7 +11,6 @@ import {
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import AddToCartForm from '@/components/add-to-cart-form';
-import ProductRecommendations from '@/components/product-recommendations';
 import { Logo } from '@/components/logo';
 
 export async function generateStaticParams() {
@@ -83,10 +82,6 @@ export default function ProductPage({ params }: { params: { id: string } }) {
             <AddToCartForm product={product} />
           </div>
         </div>
-      </div>
-      
-      <div className="mt-16 md:mt-24">
-        <ProductRecommendations currentProduct={product} />
       </div>
     </div>
   );
