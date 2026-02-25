@@ -42,7 +42,7 @@ export async function recommendProducts(
 
 const prompt = ai.definePrompt({
   name: 'productRecommendationsPrompt',
-  model: 'gemini-pro',
+  model: 'googleai/gemini-pro',
   input: {schema: ProductRecommendationsInputSchema},
   output: {schema: ProductRecommendationsOutputSchema},
   prompt: `You are an expert fashion stylist specializing in personalized recommendations for a thrift store named "Thrift Clothing Plug".
