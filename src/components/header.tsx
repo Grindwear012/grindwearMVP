@@ -95,7 +95,7 @@ export default function Header() {
 
         {/* Center Section */}
         <div className="flex flex-none items-center justify-center">
-          <p className="invisible font-anton text-xl italic tracking-wider sm:visible">
+          <p className="font-anton text-lg italic tracking-wider sm:text-xl">
             THRIFT CLOTHING PLUG
           </p>
         </div>
