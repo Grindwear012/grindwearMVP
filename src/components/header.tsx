@@ -18,7 +18,6 @@ import { useRouter } from 'next/navigation';
 import { Logo } from './logo';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from './ui/sheet';
 import { useState } from 'react';
-import ClientOnly from './client-only';
 
 const navLinks = [
   { href: '/products?category=Men', label: 'Men' },
@@ -41,25 +40,68 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur-sm">
-      <div className="container flex h-16 items-center justify-between">
-        <div className="flex items-center">
-          <Link href="/" className="flex items-center gap-2">
+      <div className="container flex h-16 items-center">
+        {/* Left Section */}
+        <div className="flex flex-1 items-center justify-start">
+          <div className="md:hidden">
+            <Sheet open={open} onOpenChange={setOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" suppressHydrationWarning={true}>
+                  <Menu className="h-5 w-5" />
+                  <span className="sr-only">Toggle Menu</span>
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left" className="sm:max-w-xs">
+                <SheetHeader>
+                  <SheetTitle>
+                    <span className="sr-only">Menu</span>
+                  </SheetTitle>
+                </SheetHeader>
+                <nav className="grid gap-6 text-lg font-medium">
+                  <Link
+                    href="/"
+                    className="flex items-center gap-2 text-lg font-semibold"
+                    onClick={() => setOpen(false)}
+                  >
+                    <Logo className="h-8 w-auto" />
+                    <span>ThriftClothingPlug</span>
+                  </Link>
+                  {navLinks.map((link) => (
+                    <Link
+                      key={link.label}
+                      href={link.href}
+                      className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground"
+                      onClick={() => setOpen(false)}
+                    >
+                      {link.label}
+                    </Link>
+                  ))}
+                  <Link
+                    href="/products"
+                    className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground"
+                    onClick={() => setOpen(false)}
+                  >
+                    Search
+                  </Link>
+                </nav>
+              </SheetContent>
+            </Sheet>
+          </div>
+          <Link href="/" className="ml-2 flex items-center gap-2 md:ml-0">
             <Logo className="h-8 w-auto" />
             <span className="sr-only">ThriftClothingPlug</span>
           </Link>
         </div>
 
-        <div className="hidden sm:block">
-            <ClientOnly>
-                <p className="font-anton text-xl italic tracking-wider">
-                THRIFT CLOTHING PLUG
-                </p>
-            </ClientOnly>
+        {/* Center Section */}
+        <div className="flex flex-none items-center justify-center">
+          <p className="invisible font-anton text-xl italic tracking-wider sm:visible">
+            THRIFT CLOTHING PLUG
+          </p>
         </div>
 
-
-        {/* Icons */}
-        <div className="flex items-center gap-1">
+        {/* Right Section */}
+        <div className="flex flex-1 items-center justify-end gap-1">
           <Link href="/products">
             <Button variant="ghost" size="icon" suppressHydrationWarning={true}>
               <Search className="h-5 w-5" />
@@ -116,52 +158,6 @@ export default function Header() {
               )}
             </Button>
           </Link>
-
-          {/* Mobile Nav */}
-          <div className="md:hidden">
-            <Sheet open={open} onOpenChange={setOpen}>
-              <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" suppressHydrationWarning={true}>
-                  <Menu className="h-5 w-5" />
-                  <span className="sr-only">Toggle Menu</span>
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="left" className="sm:max-w-xs">
-                <SheetHeader>
-                  <SheetTitle>
-                    <span className="sr-only">Menu</span>
-                  </SheetTitle>
-                </SheetHeader>
-                <nav className="grid gap-6 text-lg font-medium">
-                  <Link
-                    href="/"
-                    className="flex items-center gap-2 text-lg font-semibold"
-                     onClick={() => setOpen(false)}
-                  >
-                    <Logo className="h-8 w-auto" />
-                    <span>ThriftClothingPlug</span>
-                  </Link>
-                  {navLinks.map((link) => (
-                    <Link
-                      key={link.label}
-                      href={link.href}
-                      className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground"
-                      onClick={() => setOpen(false)}
-                    >
-                      {link.label}
-                    </Link>
-                  ))}
-                   <Link
-                      href="/products"
-                      className="flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground"
-                      onClick={() => setOpen(false)}
-                    >
-                      Search
-                    </Link>
-                </nav>
-              </SheetContent>
-            </Sheet>
-          </div>
         </div>
       </div>
     </header>
