@@ -46,9 +46,9 @@ export default function CartPage() {
                     <Image
                       src={item.product.images[0].url}
                       alt={item.product.name}
-                      width={100}
-                      height={125}
-                      className="aspect-[4/5] rounded-md object-cover"
+                      width={50}
+                      height={63}
+                      className="aspect-[4/5] w-[50px] rounded-md object-cover"
                       data-ai-hint={item.product.images[0].hint}
                     />
                     <div className="flex-1">

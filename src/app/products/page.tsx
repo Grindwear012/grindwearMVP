@@ -49,7 +49,7 @@ export default function ProductsPage() {
 
   return (
     <div>
-      <section className="relative h-64 w-full md:h-80">
+      <section className="relative h-32 w-full md:h-40">
         {heroImage && (
           <Image
             src={heroImage.imageUrl}
@@ -86,9 +86,9 @@ export default function ProductsPage() {
           {filteredProducts.length > 0 ? (
             <div className="relative">
               <ScrollArea>
-                <div className="flex space-x-6 pb-4">
+                <div className="flex space-x-3 pb-4">
                   {filteredProducts.map((product) => (
-                    <div key={product.id} className="w-[280px] shrink-0">
+                    <div key={product.id} className="w-[140px] shrink-0">
                       <ProductCard product={product} />
                     </div>
                   ))}

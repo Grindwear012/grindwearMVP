@@ -33,8 +33,8 @@ export default function ProductPage({ params }: { params: { id: string } }) {
 
   return (
     <div className="container mx-auto py-6 md:py-10">
-      <div className="grid grid-cols-1 gap-8 md:grid-cols-2 md:gap-12">
-        <div>
+      <div className="grid grid-cols-1 gap-8 md:grid-cols-3 md:gap-12">
+        <div className="md:col-span-1">
           <Carousel className="w-full">
             <CarouselContent>
               {product.images.map((image, index) => (
@@ -42,8 +42,8 @@ export default function ProductPage({ params }: { params: { id: string } }) {
                     <Image
                       src={image.url}
                       alt={`${product.name} - view ${index + 1}`}
-                      width={800}
-                      height={1000}
+                      width={400}
+                      height={500}
                       className="aspect-[4/5] w-full object-cover rounded-xl"
                       data-ai-hint={image.hint}
                     />
@@ -59,7 +59,7 @@ export default function ProductPage({ params }: { params: { id: string } }) {
           </Carousel>
         </div>
 
-        <div className="flex flex-col pt-2">
+        <div className="flex flex-col pt-2 md:col-span-2">
           <div className="flex items-center gap-2 mb-2">
             <Logo className="h-6 w-6 rounded-full" />
             <span className="font-semibold text-sm">{product.brand}</span>

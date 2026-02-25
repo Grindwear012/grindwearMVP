@@ -150,9 +150,9 @@ export default function CheckoutPage() {
                 <Image
                   src={item.product.images[0].url}
                   alt={item.product.name}
-                  width={64}
-                  height={80}
-                  className="aspect-[4/5] rounded-md object-cover"
+                  width={32}
+                  height={40}
+                  className="aspect-[4/5] w-[32px] rounded-md object-cover"
                   data-ai-hint={item.product.images[0].hint}
                 />
                 <div className="flex-1">
