@@ -31,7 +31,7 @@ export default function ProductPage({ params }: { params: { id: string } }) {
   const effectivePrice = product.salePrice ?? product.price;
 
   return (
-    <div className="container mx-auto py-6 md:py-10">
+    <div className="container mx-auto px-4 py-6 md:py-10">
       <div className="grid grid-cols-1 gap-8 md:grid-cols-3 md:gap-12">
         <div className="md:col-span-1">
           <Carousel className="w-full">
