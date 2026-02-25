@@ -4,8 +4,12 @@ export type Product = {
   description: string;
   longDescription: string;
   price: number;
+  salePrice?: number;
   images: { url: string; hint: string }[];
   category: string;
+  brand: string;
+  rating: number;
+  reviews: number;
   sizes: string[];
   colors: string[];
 };

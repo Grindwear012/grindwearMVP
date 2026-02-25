@@ -8,12 +8,12 @@ import { Label } from '@/components/ui/label';
 import { ShoppingCart } from 'lucide-react';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { cn } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
 
 interface AddToCartFormProps {
   product: Product;
 }
 
-// Helper to map color names to Tailwind CSS classes
 const colorNameToClass = (colorName: string): string => {
   const mapping: { [key: string]: string } = {
     'Faded Black': 'bg-gray-800',
@@ -32,18 +32,23 @@ const colorNameToClass = (colorName: string): string => {
 
 export default function AddToCartForm({ product }: AddToCartFormProps) {
   const { addToCart } = useCart();
+  const { toast } = useToast();
   const [selectedSize, setSelectedSize] = useState(product.sizes[0]);
   const [selectedColor, setSelectedColor] = useState(product.colors[0]);
 
   const handleAddToCart = () => {
     addToCart(product, selectedSize, selectedColor);
+    toast({
+      title: "Added to cart",
+      description: `${product.name} is now in your basket.`,
+    });
   };
 
   return (
     <div className="space-y-6">
-      <div className="space-y-4">
+      <div className="flex gap-8">
         <div>
-          <Label className="text-base font-medium">Size</Label>
+          <Label className="text-sm font-medium text-muted-foreground">Size</Label>
           <RadioGroup
             value={selectedSize}
             onValueChange={setSelectedSize}
@@ -55,7 +60,7 @@ export default function AddToCartForm({ product }: AddToCartFormProps) {
                 <Label
                   htmlFor={`size-${size}`}
                   className={cn(
-                    'flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border text-sm font-medium uppercase transition-colors',
+                    'flex h-10 w-12 cursor-pointer items-center justify-center rounded-lg border text-sm font-medium uppercase transition-colors',
                     'peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary peer-data-[state=checked]:text-primary-foreground',
                     'hover:bg-accent hover:text-accent-foreground'
                   )}
@@ -67,7 +72,7 @@ export default function AddToCartForm({ product }: AddToCartFormProps) {
           </RadioGroup>
         </div>
         <div>
-          <Label className="text-base font-medium">Color</Label>
+          <Label className="text-sm font-medium text-muted-foreground">Color</Label>
            <RadioGroup
             value={selectedColor}
             onValueChange={setSelectedColor}
@@ -80,9 +85,9 @@ export default function AddToCartForm({ product }: AddToCartFormProps) {
                   htmlFor={`color-${color}`}
                   title={color}
                   className={cn(
-                    'flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border-2 transition-colors',
+                    'flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border-2 transition-colors',
                     colorNameToClass(color),
-                    'peer-data-[state=checked]:ring-2 peer-data-[state=checked]:ring-ring peer-data-[state=checked]:ring-offset-2'
+                    'peer-data-[state=checked]:ring-2 peer-data-[state=checked]:ring-primary peer-data-[state=checked]:ring-offset-2'
                   )}
                 />
               </div>
@@ -90,10 +95,15 @@ export default function AddToCartForm({ product }: AddToCartFormProps) {
           </RadioGroup>
         </div>
       </div>
-      <Button size="lg" className="w-full" onClick={handleAddToCart}>
-        <ShoppingCart className="mr-2 h-5 w-5" />
-        Add to Cart
-      </Button>
+      <div className="flex gap-4">
+        <Button size="lg" className="w-full" onClick={handleAddToCart}>
+            <ShoppingCart className="mr-2 h-5 w-5" />
+            Add to Cart
+        </Button>
+        <Button size="lg" variant="outline" className="w-full">
+            Buy Now
+        </Button>
+      </div>
     </div>
   );
 }

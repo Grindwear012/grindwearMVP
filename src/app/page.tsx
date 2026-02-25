@@ -3,116 +3,75 @@ import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { getProducts } from '@/lib/products';
 import ProductCard from '@/components/product-card';
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from '@/components/ui/carousel';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
+import { Card, CardContent } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
 
 export default function HomePage() {
   const products = getProducts();
-  const bestsellers = products.slice(0, 8); // Get first 8 products for the carousel
+  const flashSaleProducts = products.slice(0, 4);
 
-  const heroImage = PlaceHolderImages.find(img => img.id === 'hero-model');
-  const collectionMenImage = PlaceHolderImages.find(img => img.id === 'collection-men');
-  const collectionWomenImage = PlaceHolderImages.find(img => img.id === 'collection-women');
+  const promoImage = PlaceHolderImages.find(img => img.id === 'promo-banner-hoodie');
+  
+  const categories = [
+    { name: 'Men', href: '/products?category=Men' },
+    { name: 'Women', href: '/products?category=Women' },
+    { name: 'Accessories', href: '/products?category=Accessories' },
+  ];
 
   return (
     <div className="bg-background">
-      {/* Hero Section */}
-      <section className="container mx-auto grid grid-cols-1 md:grid-cols-2 items-center gap-8 py-12 md:py-24">
-        <div className="flex flex-col items-start space-y-6">
-          <h1 className="text-5xl md:text-7xl font-bold tracking-tighter uppercase">
-            TCP Wear
-          </h1>
-          <p className="max-w-md text-lg text-muted-foreground">
-            Functional clothing for an active lifestyle.
-          </p>
-          <Button size="lg" asChild className="rounded-full px-8 py-6 text-base">
-            <Link href="/products">
-              TO CATALOG
-            </Link>
-          </Button>
-        </div>
-        <div className="flex items-center justify-center">
-          {heroImage && (
-            <Image
-              src={heroImage.imageUrl}
-              alt="Model wearing modern streetwear"
-              width={600}
-              height={750}
-              className="rounded-lg object-cover aspect-[4/5]"
-              data-ai-hint={heroImage.imageHint}
-              priority
-            />
-          )}
-        </div>
-      </section>
+      <div className="container mx-auto px-4 py-6">
 
-      {/* Summer Collection Section */}
-      <section className="container mx-auto py-12 md:py-20">
-         <div className="relative grid grid-cols-1 md:grid-cols-2 gap-4 h-[70vh]">
-            <div className="group relative w-full h-full overflow-hidden">
-                {collectionMenImage && <Image src={collectionMenImage.imageUrl} alt="Men's collection" fill className="object-cover" data-ai-hint={collectionMenImage.imageHint} />}
-                <div className="absolute inset-0 bg-black/10 flex items-start justify-start p-8">
-                  <ul className="text-white font-medium text-lg space-y-2">
-                    <li>T-SHIRTS</li>
-                    <li>HOODIES</li>
-                    <li>ZIP HOODIES</li>
-                    <li>SWEATSHIRTS</li>
-                    <li>BOMBERS</li>
-                  </ul>
+        {/* Promo Banner Section */}
+        {promoImage && (
+            <div className="relative mb-8 h-64 w-full rounded-xl overflow-hidden">
+                <Image
+                    src={promoImage.imageUrl}
+                    alt="Promotional banner"
+                    fill
+                    className="object-cover"
+                    data-ai-hint={promoImage.imageHint}
+                />
+                <div className="absolute inset-0 bg-black/40 flex flex-col items-start justify-end p-6">
+                    <h2 className="text-2xl font-bold text-white">Don't miss out -</h2>
+                    <p className="text-white/90 mb-4">Save up to 50% on your favorite products.</p>
+                    <Button asChild variant="secondary" size="sm">
+                        <Link href="/products">Shop Now</Link>
+                    </Button>
                 </div>
             </div>
-            <div className="group relative w-full h-full overflow-hidden">
-                {collectionWomenImage && <Image src={collectionWomenImage.imageUrl} alt="Women's collection" fill className="object-cover" data-ai-hint={collectionWomenImage.imageHint} />}
-                <div className="absolute inset-0 bg-black/10 flex items-start justify-end p-8 text-right">
-                   <ul className="text-white font-medium text-lg space-y-2">
-                    <li>JOGGERS</li>
-                    <li>SHORTS</li>
-                    <li>PANTS</li>
-                    <li>SOCKS</li>
-                    <li>HATS</li>
-                  </ul>
-                </div>
-            </div>
-            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center">
-              <h2 className="text-4xl md:text-6xl font-bold text-white tracking-widest uppercase drop-shadow-lg">Summer Collection</h2>
-              <p className="text-white mt-2 text-lg drop-shadow-md">2026</p>
-            </div>
-         </div>
-      </section>
+        )}
 
-      {/* Bestsellers Section */}
-      <section id="bestsellers" className="container mx-auto py-12 md:py-20">
-        <div className="flex justify-between items-center mb-8">
-          <h2 className="text-3xl md:text-4xl font-bold uppercase tracking-wider">Bestsellers</h2>
-          <Button variant="outline" asChild className="rounded-full px-6">
-            <Link href="/products">TO CATALOG</Link>
-          </Button>
-        </div>
-        <Carousel
-          opts={{
-            align: 'start',
-          }}
-          className="w-full -ml-4"
-        >
-          <CarouselContent>
-            {bestsellers.map((product) => (
-              <CarouselItem key={product.id} className="pl-4 sm:basis-1/2 md:basis-1/3 lg:basis-1/4">
-                <ProductCard product={product} />
-              </CarouselItem>
+        {/* Popular Categories Section */}
+        <section className="mb-10">
+          <h2 className="text-xl font-bold mb-4">Popular Categories</h2>
+          <div className="grid grid-cols-3 gap-4">
+            {categories.map((category) => (
+                <Link href={category.href} key={category.name}>
+                    <Card className="flex items-center justify-center p-6 hover:bg-accent transition-colors">
+                        <span className="font-semibold">{category.name}</span>
+                    </Card>
+                </Link>
             ))}
-          </CarouselContent>
-          <div className='hidden md:block'>
-            <CarouselPrevious className="absolute left-0 top-1/2 -translate-y-1/2" />
-            <CarouselNext className="absolute right-0 top-1/2 -translate-y-1/2" />
           </div>
-        </Carousel>
-      </section>
+        </section>
+
+        {/* Flash Sale Section */}
+        <section id="bestsellers">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-bold">Flash Sale</h2>
+            <Link href="/products" className="text-sm font-medium text-primary hover:underline">
+              View All
+            </Link>
+          </div>
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+            {flashSaleProducts.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
+        </section>
+      </div>
     </div>
   );
 }

@@ -12,7 +12,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import AddToCartForm from '@/components/add-to-cart-form';
 import ProductRecommendations from '@/components/product-recommendations';
-import { Badge } from '@/components/ui/badge';
+import { Star } from 'lucide-react';
+import { Logo } from '@/components/logo';
 
 export async function generateStaticParams() {
   const products = getProducts();
@@ -28,46 +29,68 @@ export default function ProductPage({ params }: { params: { id: string } }) {
     notFound();
   }
 
+  const effectivePrice = product.salePrice ?? product.price;
+
   return (
-    <div className="container mx-auto py-8 md:py-12">
+    <div className="container mx-auto py-6 md:py-10">
       <div className="grid grid-cols-1 gap-8 md:grid-cols-2 md:gap-12">
         <div>
           <Carousel className="w-full">
             <CarouselContent>
               {product.images.map((image, index) => (
                 <CarouselItem key={index}>
-                  <Card className="overflow-hidden">
-                    <CardContent className="p-0">
-                      <Image
-                        src={image.url}
-                        alt={`${product.name} - view ${index + 1}`}
-                        width={800}
-                        height={1000}
-                        className="aspect-[4/5] w-full object-cover"
-                        data-ai-hint={image.hint}
-                      />
-                    </CardContent>
-                  </Card>
+                    <Image
+                      src={image.url}
+                      alt={`${product.name} - view ${index + 1}`}
+                      width={800}
+                      height={1000}
+                      className="aspect-[4/5] w-full object-cover rounded-xl"
+                      data-ai-hint={image.hint}
+                    />
                 </CarouselItem>
               ))}
             </CarouselContent>
-            <CarouselPrevious className="left-4" />
-            <CarouselNext className="right-4" />
+            {product.images.length > 1 && (
+                <>
+                    <CarouselPrevious className="left-4" />
+                    <CarouselNext className="right-4" />
+                </>
+            )}
           </Carousel>
         </div>
 
-        <div className="flex flex-col">
-          <Badge variant="secondary" className="w-fit">{product.category}</Badge>
-          <h1 className="mt-2 text-3xl font-bold tracking-tight lg:text-4xl">
+        <div className="flex flex-col pt-2">
+          <div className="flex items-center gap-2 mb-2">
+            <Logo className="h-6 w-6 rounded-full" />
+            <span className="font-semibold text-sm">{product.brand}</span>
+          </div>
+          <h1 className="text-2xl font-bold tracking-tight lg:text-3xl">
             {product.name}
           </h1>
-          <p className="mt-4 text-3xl font-semibold">R{product.price.toFixed(2)}</p>
-          <Separator className="my-6" />
-          <p className="text-base text-muted-foreground">
+
+          <div className="flex items-center gap-4 mt-2">
+            <div className="flex items-center gap-1">
+              <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
+              <span className="font-bold">{product.rating}</span>
+              <span className="text-sm text-muted-foreground">({product.reviews} reviews)</span>
+            </div>
+            <Separator orientation="vertical" className="h-4" />
+            <span className="text-sm font-medium text-green-600">9.3k+ sold</span>
+          </div>
+
+          <Separator className="my-5" />
+
+          <p className="text-base leading-relaxed text-muted-foreground">
             {product.longDescription}
           </p>
           
-          <div className="mt-8">
+          <div className="mt-auto pt-8">
+            <div className="flex items-baseline gap-2 mb-5">
+                <span className="text-3xl font-bold">R{effectivePrice.toFixed(2)}</span>
+                {product.salePrice && (
+                    <span className="text-lg text-muted-foreground line-through">R{product.price.toFixed(2)}</span>
+                )}
+            </div>
             <AddToCartForm product={product} />
           </div>
         </div>

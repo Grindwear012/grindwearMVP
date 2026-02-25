@@ -7,6 +7,7 @@ import { CartProvider } from '@/hooks/use-cart';
 import { Toaster } from '@/components/ui/toaster';
 import Footer from '@/components/footer';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
+import BottomNav from '@/components/bottom-nav';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
 
@@ -32,9 +33,10 @@ export default function RootLayout({
           <CartProvider>
             <div className="relative flex min-h-dvh flex-col bg-background">
               <Header />
-              <main className="flex-1">{children}</main>
+              <main className="flex-1 pb-16 md:pb-0">{children}</main>
               <Footer />
             </div>
+            <BottomNav />
             <Toaster />
           </CartProvider>
         </FirebaseClientProvider>
