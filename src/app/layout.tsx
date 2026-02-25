@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
-import { Inter } from 'next/font/google';
+import { Anton, Inter } from 'next/font/google';
 import { cn } from '@/lib/utils';
 import Header from '@/components/header';
 import { CartProvider } from '@/hooks/use-cart';
@@ -9,6 +9,12 @@ import Footer from '@/components/footer';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
+const anton = Anton({
+  subsets: ['latin'],
+  weight: '400',
+  style: 'normal',
+  variable: '--font-anton',
+});
 
 export const metadata: Metadata = {
   title: 'Thrift Clothing Plug',
@@ -25,7 +31,8 @@ export default function RootLayout({
       <body
         className={cn(
           'min-h-screen bg-background font-sans antialiased',
-          inter.variable
+          inter.variable,
+          anton.variable
         )}
       >
         <FirebaseClientProvider>

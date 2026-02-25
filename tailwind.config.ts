@@ -13,6 +13,7 @@ export default {
         body: ['Inter', 'sans-serif'],
         headline: ['Inter', 'sans-serif'],
         code: ['monospace'],
+        anton: ['var(--font-anton)'],
       },
       colors: {
         background: 'hsl(var(--background))',

@@ -40,7 +40,7 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur-sm">
-      <div className="container flex h-16 items-center justify-between">
+      <div className="container relative flex h-16 items-center justify-between">
         <div className="flex items-center gap-6">
           <Link href="/" className="flex items-center gap-2">
             <Logo className="h-8 w-auto" />
@@ -60,6 +60,13 @@ export default function Header() {
             ))}
           </nav>
         </div>
+
+        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+          <p className="hidden font-anton text-xl italic tracking-wider md:block">
+            THRIFT STORE CLOTHING
+          </p>
+        </div>
+
 
         {/* Icons */}
         <div className="flex items-center gap-1">
@@ -124,7 +131,7 @@ export default function Header() {
           <div className="md:hidden">
             <Sheet open={open} onOpenChange={setOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon">
+                <Button variant="ghost" size="icon" suppressHydrationWarning={true}>
                   <Menu className="h-5 w-5" />
                   <span className="sr-only">Toggle Menu</span>
                 </Button>
