@@ -18,6 +18,7 @@ import { useRouter } from 'next/navigation';
 import { Logo } from './logo';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from './ui/sheet';
 import { useState } from 'react';
+import ClientOnly from './client-only';
 
 const navLinks = [
   { href: '/products?category=Men', label: 'Men' },
@@ -62,19 +63,21 @@ export default function Header() {
         </div>
 
         <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-          <p className="font-anton text-xl italic tracking-wider">
-            THRIFT CLOTHING PLUG
-          </p>
+          <ClientOnly>
+            <p className="font-anton text-xl italic tracking-wider">
+              THRIFT CLOTHING PLUG
+            </p>
+          </ClientOnly>
         </div>
 
 
         {/* Icons */}
         <div className="flex items-center gap-1">
-           <Link href="/products" className="hidden md:flex">
-              <Button variant="ghost" size="icon" suppressHydrationWarning={true}>
+          <Link href="/products">
+            <Button variant="ghost" size="icon" suppressHydrationWarning={true}>
               <Search className="h-5 w-5" />
               <span className="sr-only">Search</span>
-              </Button>
+            </Button>
           </Link>
 
           <DropdownMenu>
@@ -138,7 +141,9 @@ export default function Header() {
               </SheetTrigger>
               <SheetContent side="left" className="sm:max-w-xs">
                 <SheetHeader>
-                  <SheetTitle className="sr-only">Menu</SheetTitle>
+                  <SheetTitle>
+                    <span className="sr-only">Menu</span>
+                  </SheetTitle>
                 </SheetHeader>
                 <nav className="grid gap-6 text-lg font-medium">
                   <Link
