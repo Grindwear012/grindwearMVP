@@ -79,7 +79,7 @@ export default function HomePage() {
                   </ul>
                 </div>
             </div>
-            <div className="absolute inset-0 flex flex-col items-center justify-center pt-16 pointer-events-none text-center">
+            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center">
               <h2 className="text-4xl md:text-6xl font-bold text-white tracking-widest uppercase drop-shadow-lg">Summer Collection</h2>
               <p className="text-white mt-2 text-lg drop-shadow-md">2026</p>
             </div>

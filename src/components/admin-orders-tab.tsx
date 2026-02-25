@@ -4,6 +4,7 @@ import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
@@ -50,34 +51,60 @@ export default function AdminOrdersTab() {
             <CardDescription>View and manage all customer orders.</CardDescription>
         </CardHeader>
         <CardContent>
-        <Table>
-            <TableHeader>
-            <TableRow>
-                <TableHead>Order ID</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Customer</TableHead>
-                <TableHead>Total</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead></TableHead>
-            </TableRow>
-            </TableHeader>
-            <TableBody>
-            {mockOrders.map((order) => (
-                <TableRow key={order.id}>
-                    <TableCell className="font-medium">{order.id}</TableCell>
-                    <TableCell>{order.date}</TableCell>
-                    <TableCell>{order.customer}</TableCell>
-                    <TableCell>{order.total}</TableCell>
-                    <TableCell>
-                        <Badge variant={getStatusVariant(order.status) as any}>{order.status}</Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                        <Button variant="outline" size="sm">Manage</Button>
-                    </TableCell>
+        {/* Desktop View */}
+        <div className="hidden md:block">
+            <Table>
+                <TableHeader>
+                <TableRow>
+                    <TableHead>Order ID</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Customer</TableHead>
+                    <TableHead>Total</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead></TableHead>
                 </TableRow>
+                </TableHeader>
+                <TableBody>
+                {mockOrders.map((order) => (
+                    <TableRow key={order.id}>
+                        <TableCell className="font-medium">{order.id}</TableCell>
+                        <TableCell>{order.date}</TableCell>
+                        <TableCell>{order.customer}</TableCell>
+                        <TableCell>{order.total}</TableCell>
+                        <TableCell>
+                            <Badge variant={getStatusVariant(order.status) as any}>{order.status}</Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                            <Button variant="outline" size="sm">Manage</Button>
+                        </TableCell>
+                    </TableRow>
+                ))}
+                </TableBody>
+            </Table>
+        </div>
+        {/* Mobile View */}
+        <div className="grid grid-cols-1 gap-4 md:hidden">
+            {mockOrders.map((order) => (
+                <Card key={order.id}>
+                    <CardHeader>
+                        <div className="flex items-start justify-between">
+                            <div>
+                                <CardTitle className="text-base">{order.id}</CardTitle>
+                                <CardDescription>{order.customer}</CardDescription>
+                            </div>
+                            <Badge variant={getStatusVariant(order.status) as any}>{order.status}</Badge>
+                        </div>
+                        <CardDescription>{order.date}</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <p className="font-semibold">{order.total}</p>
+                    </CardContent>
+                    <CardFooter>
+                        <Button variant="outline" size="sm" className="w-full">Manage</Button>
+                    </CardFooter>
+                </Card>
             ))}
-            </TableBody>
-        </Table>
+        </div>
         </CardContent>
     </Card>
   );

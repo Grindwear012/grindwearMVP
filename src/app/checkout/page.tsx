@@ -95,7 +95,7 @@ export default function CheckoutPage() {
                   
                   <div className="space-y-4">
                     <h3 className="font-semibold text-lg">Shipping Address</h3>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <FormField name="firstName" render={({ field }) => (
                           <FormItem><FormLabel>First Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                       )} />
@@ -106,7 +106,7 @@ export default function CheckoutPage() {
                      <FormField name="address" render={({ field }) => (
                           <FormItem><FormLabel>Address</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                       )} />
-                     <div className="grid grid-cols-2 gap-4">
+                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                        <FormField name="city" render={({ field }) => (
                           <FormItem><FormLabel>City</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                         )} />
@@ -124,7 +124,7 @@ export default function CheckoutPage() {
                      <FormField name="cardNumber" render={({ field }) => (
                           <FormItem><FormLabel>Card Number</FormLabel><FormControl><Input placeholder="•••• •••• •••• ••••" {...field} /></FormControl><FormMessage /></FormItem>
                       )} />
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                        <FormField name="cardExpiry" render={({ field }) => (
                           <FormItem><FormLabel>Expiry (MM/YY)</FormLabel><FormControl><Input placeholder="MM/YY" {...field} /></FormControl><FormMessage /></FormItem>
                         )} />
