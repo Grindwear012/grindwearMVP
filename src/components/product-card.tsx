@@ -11,7 +11,7 @@ export default function ProductCard({ product }: ProductCardProps) {
   const effectivePrice = product.salePrice ?? product.price;
 
   return (
-    <div className="group relative">
+    <div className="group relative w-full">
       <Link href={`/products/${product.id}`} className="block overflow-hidden rounded-lg bg-muted">
         <Image
           src={product.images[0].url}

@@ -43,11 +43,8 @@ export default function HomePage() {
       <div className="container mx-auto px-4 py-12 md:py-20">
         {/* Summer Collection Section */}
         <section id="summer-collection" className="mb-16 md:mb-24">
-          <div className="relative mb-8 text-center">
-            <h2
-              className="relative z-10 inline-block bg-background px-4 text-5xl font-bold tracking-tighter text-foreground drop-shadow-lg md:text-6xl"
-              style={{ top: '2.5rem' }}
-            >
+          <div className="mb-12 text-center">
+            <h2 className="text-5xl font-bold tracking-tighter text-foreground md:text-6xl">
               Summer Collection
             </h2>
           </div>
