@@ -11,16 +11,7 @@ export default function Footer() {
             <Logo className="h-16 mb-2" />
             <p className="text-muted-foreground text-sm">Sustainable style, one piece at a time.</p>
           </div>
-          <div className="grid grid-cols-2 gap-8 sm:grid-cols-3 md:col-span-2">
-            <div>
-              <h3 className="font-semibold mb-2">Shop</h3>
-              <ul className="space-y-2">
-                <li><Link href="/products?category=Men" className="text-sm text-muted-foreground hover:text-primary">Men</Link></li>
-                <li><Link href="/products?category=Women" className="text-sm text-muted-foreground hover:text-primary">Women</Link></li>
-                <li><Link href="/products?category=Accessories" className="text-sm text-muted-foreground hover:text-primary">Accessories</Link></li>
-                <li><Link href="#" className="text-sm text-muted-foreground hover:text-primary">Sale</Link></li>
-              </ul>
-            </div>
+          <div className="grid grid-cols-2 gap-8 sm:grid-cols-2 md:col-span-2">
              <div>
               <h3 className="font-semibold mb-2">About</h3>
               <ul className="space-y-2">
@@ -41,7 +32,7 @@ export default function Footer() {
             <div className="text-center sm:text-left">
                 <p className="text-sm text-muted-foreground">
                   <Link href="/admin" className="hover:text-primary transition-colors">
-                    &copy; {new Date().getFullYear()} Thrift Clothing Plug. All Rights Reserved.
+                    &copy; 2026 Thrift Clothing Plug. All Rights Reserved.
                   </Link>
                 </p>
                 <p className="text-xs text-muted-foreground">Powered by GRINDWEAR STUDIOS</p>
