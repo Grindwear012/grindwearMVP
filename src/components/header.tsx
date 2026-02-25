@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useRouter } from 'next/navigation';
 import { Logo } from './logo';
-import { Sheet, SheetContent, SheetTrigger } from './ui/sheet';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from './ui/sheet';
 import { useState } from 'react';
 
 const navLinks = [
@@ -130,6 +130,9 @@ export default function Header() {
                 </Button>
               </SheetTrigger>
               <SheetContent side="left" className="sm:max-w-xs">
+                <SheetHeader>
+                  <SheetTitle className="sr-only">Menu</SheetTitle>
+                </SheetHeader>
                 <nav className="grid gap-6 text-lg font-medium">
                   <Link
                     href="/"
