@@ -81,6 +81,7 @@ User preferences (if provided):
 
 Based on the above, please provide a list of up to 4 product IDs for personalized thrift clothing recommendations. The IDs must be selected from the list of available products.`,
   config: {
+    model: 'gemini-pro',
     safetySettings: [
       {
         category: 'HARM_CATEGORY_DANGEROUS_CONTENT',
@@ -109,7 +110,7 @@ const productRecommendationsFlow = ai.defineFlow(
     outputSchema: ProductRecommendationsOutputSchema,
   },
   async input => {
-    const {output} = await prompt(input, { model: 'gemini-pro' });
+    const {output} = await prompt(input);
     return output!;
   }
 );
