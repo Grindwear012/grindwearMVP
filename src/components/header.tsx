@@ -41,33 +41,20 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur-sm">
-      <div className="container relative flex h-16 items-center justify-between">
-        <div className="flex items-center gap-6">
+      <div className="container flex h-16 items-center justify-between">
+        <div className="flex items-center">
           <Link href="/" className="flex items-center gap-2">
             <Logo className="h-8 w-auto" />
-            <span className="hidden font-semibold sm:inline-block">
-              ThriftClothingPlug
-            </span>
+            <span className="sr-only">ThriftClothingPlug</span>
           </Link>
-          <nav className="hidden items-center space-x-6 text-sm font-medium md:flex">
-            {navLinks.map((link) => (
-              <Link
-                key={link.label}
-                href={link.href}
-                className="font-medium text-muted-foreground transition-colors hover:text-primary"
-              >
-                {link.label}
-              </Link>
-            ))}
-          </nav>
         </div>
 
-        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-          <ClientOnly>
-            <p className="font-anton text-xl italic tracking-wider">
-              THRIFT CLOTHING PLUG
-            </p>
-          </ClientOnly>
+        <div className="hidden sm:block">
+            <ClientOnly>
+                <p className="font-anton text-xl italic tracking-wider">
+                THRIFT CLOTHING PLUG
+                </p>
+            </ClientOnly>
         </div>
 
 
