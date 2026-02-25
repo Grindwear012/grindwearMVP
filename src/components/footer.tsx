@@ -4,8 +4,8 @@ import { Logo } from './logo';
 
 export default function Footer() {
   return (
-    <footer className="hidden border-t bg-background md:block">
-      <div className="container mx-auto py-12">
+    <footer className="border-t bg-background">
+      <div className="container mx-auto px-4 py-12 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
           <div className="flex flex-col items-start">
             <Logo className="h-16 mb-2" />

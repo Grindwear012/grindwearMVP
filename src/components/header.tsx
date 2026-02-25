@@ -5,7 +5,6 @@ import {
   Search,
   ShoppingCart,
   User,
-  Heart,
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { useCart } from '@/hooks/use-cart';
@@ -35,30 +34,27 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur-sm">
-      <div className="container flex h-16 items-center">
-        {/* Left: Logo */}
-        <div className="flex">
-          <Link href="/" className="flex items-center gap-2">
-            <Logo className="h-8" />
-            <span className="hidden text-lg font-semibold tracking-wide md:block">TCP</span>
-          </Link>
-        </div>
-
-        {/* Center: Title (Mobile) */}
-        <div className="flex flex-1 items-center justify-center md:hidden">
-            <span className="text-lg font-semibold">ThriftClothingPlug</span>
-        </div>
+      <div className="container flex h-16 items-center justify-between">
+        {/* Left: Logo and Brand Name */}
+        <Link href="/" className="flex items-center gap-2">
+          <Logo className="h-8 w-auto" />
+          <span className="text-lg font-semibold tracking-wide">
+            ThriftClothingPlug
+          </span>
+        </Link>
 
         {/* Right: Icons */}
-        <div className="flex flex-1 items-center justify-end space-x-2">
-          <Button variant="ghost" size="icon">
-            <Search className="h-5 w-5" />
-            <span className="sr-only">Search</span>
-          </Button>
+        <div className="flex items-center justify-end space-x-2">
+          <Link href="/products">
+            <Button variant="ghost" size="icon" suppressHydrationWarning={true}>
+              <Search className="h-5 w-5" />
+              <span className="sr-only">Search</span>
+            </Button>
+          </Link>
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="hidden md:flex">
+              <Button variant="ghost" size="icon" suppressHydrationWarning={true}>
                 <User className="h-5 w-5" />
                 <span className="sr-only">Account</span>
               </Button>
@@ -80,7 +76,7 @@ export default function Header() {
           </DropdownMenu>
 
           <Link href="/cart">
-            <Button variant="ghost" size="icon" className="relative">
+            <Button variant="ghost" size="icon" className="relative" suppressHydrationWarning={true}>
               <ShoppingCart className="h-5 w-5" />
               <span className="sr-only">Cart</span>
               {cartCount > 0 && <div className="absolute -right-1 -top-1 w-4 h-4 text-xs rounded-full bg-primary text-primary-foreground flex items-center justify-center">{cartCount}</div>}
