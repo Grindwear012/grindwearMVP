@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { getProducts } from '@/lib/products';
 import ProductCard from '@/components/product-card';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
@@ -8,12 +9,9 @@ import Image from 'next/image';
 import { Input } from '@/components/ui/input';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 
-export default function ProductsPage({
-  searchParams,
-}: {
-  searchParams: { category?: string };
-}) {
-  const { category } = searchParams;
+export default function ProductsPage() {
+  const searchParams = useSearchParams();
+  const category = searchParams.get('category');
   const [searchTerm, setSearchTerm] = useState('');
 
   const products = getProducts();
