@@ -12,7 +12,6 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import AddToCartForm from '@/components/add-to-cart-form';
 import ProductRecommendations from '@/components/product-recommendations';
-import { Star } from 'lucide-react';
 import { Logo } from '@/components/logo';
 
 export async function generateStaticParams() {
@@ -42,8 +41,8 @@ export default function ProductPage({ params }: { params: { id: string } }) {
                     <Image
                       src={image.url}
                       alt={`${product.name} - view ${index + 1}`}
-                      width={400}
-                      height={500}
+                      width={200}
+                      height={250}
                       className="aspect-[4/5] w-full object-cover rounded-xl"
                       data-ai-hint={image.hint}
                     />
@@ -67,16 +66,6 @@ export default function ProductPage({ params }: { params: { id: string } }) {
           <h1 className="text-2xl font-bold tracking-tight lg:text-3xl">
             {product.name}
           </h1>
-
-          <div className="flex items-center gap-4 mt-2">
-            <div className="flex items-center gap-1">
-              <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-              <span className="font-bold">{product.rating}</span>
-              <span className="text-sm text-muted-foreground">({product.reviews} reviews)</span>
-            </div>
-            <Separator orientation="vertical" className="h-4" />
-            <span className="text-sm font-medium text-green-600">9.3k+ sold</span>
-          </div>
 
           <Separator className="my-5" />
 
