@@ -26,7 +26,7 @@ export default function ProductCard({ product }: ProductCardProps) {
       {product.salePrice && (
         <Badge variant="destructive" className="absolute top-2 left-2">SALE</Badge>
       )}
-      <div className="mt-2">
+      <div className="mt-2 p-1">
         <div className="flex items-center">
             <Star className="w-4 h-4 text-yellow-400 fill-yellow-400 mr-1" />
             <span className="text-xs text-muted-foreground font-medium">{product.rating}</span>
