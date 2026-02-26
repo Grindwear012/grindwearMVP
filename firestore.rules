@@ -1,254 +1,154 @@
-/**
- * Core Philosophy: This ruleset enforces a strict user-ownership and role-based security model.
- * All customer-specific data (profiles, addresses, carts, orders) is private and can only be
- * accessed by the data's owner. Publicly browsable data, like products and categories, is
- * globally readable but writable only by administrators.
- *
- * Data Structure: The data is organized hierarchically. All private user data is nested under
- * `/users/{userId}`, where `userId` corresponds to the Firebase Authentication UID. This path-based
- * ownership simplifies rules. Public collections like `/products` and `/categories` exist at the
- * top level. Administrative roles are managed in a separate `/roles_admin` collection.
- *
- * Key Security Decisions:
- * - Strict Segregation: Private user data (`/users`) is structurally separate from public data
- *   (`/products`, `/categories`), preventing accidental data leakage and simplifying list rules.
- * - User Data Privacy: Users can only access documents within their own `/users/{userId}` data tree.
- *   Listing or viewing other users' data is explicitly disallowed.
- * - Admin Privileges: Write access to public collections (`products`, `categories`) is restricted
- *   to users whose UID exists as a document in the `/roles_admin` collection (Database-Backed
- *   Access Control). Client-side modifications to the admin list are disabled.
- * - Default Deny: Any access not explicitly granted by these rules is denied.
- *
- * Denormalization for Authorization: To ensure fast and secure authorization checks without costly
- * `get()` calls, ownership information is denormalized. For example, an `Address` document at
- * `/users/{userId}/addresses/{addressId}` contains a `customerId` field that must match the `{userId}`
- * from the path. This allows for simple, atomic validation on write operations.
- *
- * Structural Segregation: The design uses separate collections for private and public data.
- * For instance, user carts are in a private subcollection (`/users/{userId}/carts`), while
- * public product listings are in a separate top-level collection (`/products`). This is more secure
- * and performant than mixing public and private data in a single collection.
- */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Helper functions for reusable logic
-    
     /**
-     * Checks if the user is authenticated.
+     * THRIFT PLUG - FIRESTORE SECURITY RULES
+     *
+     * Core Philosophy: 
+     * This ruleset enforces a strict Path-Based Ownership model combined with Database Access Control (DBAC) 
+     * for administrative privileges. User data is isolated within specific customer paths, while 
+     * global roles are managed via a dedicated admin collection.
+     *
+     * Data Structure:
+     * - /customers/{customerId}: The root of user-specific data (Profiles, Addresses, Carts, Orders).
+     * - /products/{productId}: A top-level public catalog.
+     * - /roles_admin/{adminId}: Metadata collection used to identify system administrators.
+     *
+     * Key Security Decisions:
+     * 1. Authorization Independence: Ownership is verified directly from the document path parameters 
+     *    (e.g., {customerId}) to avoid expensive and slow cross-document lookups.
+     * 2. Administrative Access: Admin privileges are granted by checking for the existence of a 
+     *    document in the /roles_admin collection. Admins have read access to all orders for management.
+     * 3. Prototyping Flexibility: Rules strictly enforce WHO can access data but do NOT enforce 
+     *    strict field types or schemas (except for relational IDs like customerId), allowing for 
+     *    rapid UI and backend iteration.
+     * 4. Denormalization for Performance: Relational links (like customerId) are enforced on 
+     *    creation to ensure path-to-data consistency.
      */
+
+    // --- HELPER FUNCTIONS ---
+
     function isSignedIn() {
       return request.auth != null;
     }
-    
-    /**
-     * Checks if the authenticated user's UID matches the provided userId.
-     * This is the primary function for enforcing data ownership.
-     */
+
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
     }
-    
-    /**
-     * Checks if the document being accessed already exists.
-     * Used in update/delete operations to prevent modifying non-existent data.
-     */
-    function isExistingDocument() {
-      return resource != null;
-    }
-    
-    /**
-     * Combines ownership and existence checks for secure updates and deletes.
-     */
-    function isExistingOwner(userId) {
-      return isOwner(userId) && isExistingDocument();
-    }
-    
-    /**
-     * Checks if the user is an administrator by verifying the existence of their
-     * UID in the `/roles_admin` collection. This is a DBAC (Database-Backed Access Control) pattern.
-     */
+
     function isAdmin() {
       return isSignedIn() && exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid));
     }
-    
-    /**
-     * Combines admin and existence checks for secure updates and deletes by administrators.
-     */
-    function isExistingAdmin() {
-      return isAdmin() && isExistingDocument();
+
+    // Used for updates/deletes to ensure the resource exists and belongs to the user
+    function isExistingOwner(userId) {
+      return resource != null && isOwner(userId);
     }
-    
-    /**
-     * Validates that the `id` field within a user's profile document matches their UID upon creation.
-     */
-    function hasValidUserCreateData(userId) {
-      return request.resource.data.id == userId;
+
+    function isOwnerOrAdmin(userId) {
+      return isOwner(userId) || isAdmin();
     }
-    
+
+    // --- COLLECTION RULES ---
+
     /**
-     * Ensures the `id` field of a user profile is immutable on update.
+     * @description Rules for the admin roles collection. Entry existence defines admin status.
+     * @path /roles_admin/{adminId}
+     * @allow (get) If the user is the admin themselves or another admin.
+     * @deny (write) Direct client-side modification of roles is prohibited.
+     * @principle System-wide role assignment via DBAC.
      */
-    function hasValidUserUpdateData() {
-      return request.resource.data.id == resource.data.id;
+    match /roles_admin/{adminId} {
+      allow get: if isSignedIn() && (request.auth.uid == adminId || isAdmin());
+      allow list: if isAdmin();
+      allow create, update, delete: if false;
     }
-    
+
     /**
-     * Validates that the `customerId` field within a subcollection document matches the parent user's UID.
+     * @description User profile management. Users can only manage their own profile.
+     * @path /customers/{customerId}
+     * @allow (create) If the document ID matches the auth UID.
+     * @deny (update) If the user attempts to change their internal 'id' field.
+     * @principle Self-creation and strict ownership for root user documents.
      */
-    function hasValidOwnerLink(userId) {
-      return request.resource.data.customerId == userId;
+    match /customers/{customerId} {
+      allow get, list: if isOwner(customerId) || isAdmin();
+      allow create: if isOwner(customerId) && request.resource.data.id == customerId;
+      allow update: if isExistingOwner(customerId) && request.resource.data.id == resource.data.id;
+      allow delete: if isExistingOwner(customerId);
     }
-    
+
     /**
-     * Ensures the `customerId` field of a document is immutable on update.
+     * @description Customer-owned subcollections (Addresses, PaymentMethods, Carts, Interactions).
+     * @path /customers/{customerId}/[subcollection]/{id}
+     * @allow (all) Access granted only to the specific customer identified in the path.
+     * @deny (all) Access to other users' data or unauthenticated requests.
+     * @principle Path-based ownership provides atomic and performant authorization.
      */
-    function hasImmutableOwnerLink() {
-      return request.resource.data.customerId == resource.data.customerId;
+    match /customers/{customerId}/addresses/{addressId} {
+      allow get, list: if isOwner(customerId);
+      allow create: if isOwner(customerId) && request.resource.data.customerId == customerId;
+      allow update: if isExistingOwner(customerId) && request.resource.data.customerId == resource.data.customerId;
+      allow delete: if isExistingOwner(customerId);
     }
-    
+
+    match /customers/{customerId}/paymentMethods/{paymentMethodId} {
+      allow get, list: if isOwner(customerId);
+      allow create: if isOwner(customerId) && request.resource.data.customerId == customerId;
+      allow update: if isExistingOwner(customerId) && request.resource.data.customerId == resource.data.customerId;
+      allow delete: if isExistingOwner(customerId);
+    }
+
+    match /customers/{customerId}/carts/{cartId} {
+      allow get, list: if isOwner(customerId);
+      allow create: if isOwner(customerId) && request.resource.data.customerId == customerId;
+      allow update: if isExistingOwner(customerId) && request.resource.data.customerId == resource.data.customerId;
+      allow delete: if isExistingOwner(customerId);
+    }
+
+    match /customers/{customerId}/carts/{cartId}/items/{cartItemId} {
+      allow get, list: if isOwner(customerId);
+      allow create: if isOwner(customerId);
+      allow update: if isExistingOwner(customerId);
+      allow delete: if isExistingOwner(customerId);
+    }
+
+    match /customers/{customerId}/productInteractions/{interactionId} {
+      allow get, list: if isOwner(customerId);
+      allow create: if isOwner(customerId) && request.resource.data.customerId == customerId;
+      allow update, delete: if isExistingOwner(customerId);
+    }
+
     /**
-     * @description Customer profile data. A user can create their own profile,
-     *              and can only read or write their own data thereafter.
-     * @path /users/{userId}
-     * @allow (create) An authenticated user with UID 'user_abc' creating their own profile at `/users/user_abc`.
-     * @deny (get) A user 'user_xyz' trying to read the profile at `/users/user_abc`.
-     * @principle Restricts access to a user's own data tree (Self-Creation & Ownership).
+     * @description Order management. Customers can create/read their orders; admins can read/manage all orders.
+     * @path /customers/{customerId}/orders/{orderId}
+     * @allow (get, list) If user is the customer or an administrator.
+     * @deny (create) If the internal customerId does not match the authenticated path.
+     * @principle Owner-writes with administrative oversight.
      */
-    match /users/{userId} {
-      allow get, list: if isOwner(userId);
-      allow create: if isOwner(userId) && hasValidUserCreateData(userId);
-      allow update: if isExistingOwner(userId) && hasValidUserUpdateData();
-      allow delete: if isExistingOwner(userId);
-      
-      /**
-       * @description A user's address book. Only the owning user can manage their addresses.
-       * @path /users/{userId}/addresses/{addressId}
-       * @allow (create) User 'user_abc' creating a new address document in their own `/users/user_abc/addresses/` subcollection.
-       * @deny (update) User 'user_xyz' trying to update an address in `/users/user_abc/addresses/`.
-       * @principle Enforces document ownership within a user-specific subcollection.
-       */
-      match /addresses/{addressId} {
-        allow get, list: if isOwner(userId);
-        allow create: if isOwner(userId) && hasValidOwnerLink(userId);
-        allow update: if isExistingOwner(userId) && hasImmutableOwnerLink();
-        allow delete: if isExistingOwner(userId);
-      }
-      
-      /**
-       * @description A user's saved payment methods. Only the owning user can manage them.
-       * @path /users/{userId}/paymentMethods/{paymentMethodId}
-       * @allow (get) User 'user_abc' reading their own payment method at `/users/user_abc/paymentMethods/{id}`.
-       * @deny (list) User 'user_xyz' trying to list payment methods at `/users/user_abc/paymentMethods`.
-       * @principle Enforces document ownership within a user-specific subcollection.
-       */
-      match /paymentMethods/{paymentMethodId} {
-        allow get, list: if isOwner(userId);
-        allow create: if isOwner(userId) && hasValidOwnerLink(userId);
-        allow update: if isExistingOwner(userId) && hasImmutableOwnerLink();
-        allow delete: if isExistingOwner(userId);
-      }
-      
-      /**
-       * @description A user's shopping cart. Only the owning user can manage their cart.
-       * @path /users/{userId}/carts/{cartId}
-       * @allow (create) User 'user_abc' creating their shopping cart at `/users/user_abc/carts/user_abc`.
-       * @deny (delete) User 'user_xyz' trying to delete the cart at `/users/user_abc/carts/user_abc`.
-       * @principle Enforces document ownership within a user-specific subcollection.
-       */
-      match /carts/{cartId} {
-        allow get, list: if isOwner(userId);
-        allow create: if isOwner(userId) && hasValidOwnerLink(userId);
-        allow update: if isExistingOwner(userId) && hasImmutableOwnerLink();
-        allow delete: if isExistingOwner(userId);
-        
-        /**
-         * @description Items within a user's shopping cart. Access is inherited from the parent user.
-         * @path /users/{userId}/carts/{cartId}/cartItems/{cartItemId}
-         * @allow (create) User 'user_abc' adding an item to their own cart.
-         * @deny (create) User 'user_xyz' trying to add an item to user 'user_abc's cart.
-         * @principle Validates relational integrity to ensure cart items are linked to the correct cart and owner.
-         */
-        match /cartItems/{cartItemId} {
-          allow get, list: if isOwner(userId);
-          allow create: if isOwner(userId) && request.resource.data.cartId == cartId;
-          allow update: if isExistingOwner(userId) && request.resource.data.cartId == resource.data.cartId;
-          allow delete: if isExistingOwner(userId);
-        }
-      }
-      
-      /**
-       * @description A user's order history. Read-only for completed orders, but allows creation.
-       * @path /users/{userId}/orders/{orderId}
-       * @allow (list) User 'user_abc' listing their own past orders from `/users/user_abc/orders`.
-       * @deny (get) User 'user_xyz' attempting to read an order from `/users/user_abc/orders/{id}`.
-       * @principle Enforces document ownership within a user-specific subcollection.
-       */
-      match /orders/{orderId} {
-        allow get, list: if isOwner(userId);
-        allow create: if isOwner(userId) && hasValidOwnerLink(userId);
-        allow update: if isExistingOwner(userId) && hasImmutableOwnerLink();
-        allow delete: if isExistingOwner(userId);
-        
-        /**
-         * @description Items within a user's order. Access is inherited from the parent user.
-         * @path /users/{userId}/orders/{orderId}/orderItems/{orderItemId}
-         * @allow (get) User 'user_abc' reading the items of one of their past orders.
-         * @deny (update) Any user trying to change the items of a completed order.
-         * @principle Validates relational integrity to ensure order items are linked to the correct order and owner.
-         */
-        match /orderItems/{orderItemId} {
-          allow get, list: if isOwner(userId);
-          allow create: if isOwner(userId) && request.resource.data.orderId == orderId;
-          allow update: if isExistingOwner(userId) && request.resource.data.orderId == resource.data.orderId;
-          allow delete: if isExistingOwner(userId);
-        }
-      }
+    match /customers/{customerId}/orders/{orderId} {
+      allow get, list: if isOwnerOrAdmin(customerId);
+      allow create: if isOwner(customerId) && request.resource.data.customerId == customerId;
+      allow update, delete: if isOwnerOrAdmin(customerId) && resource != null;
     }
-    
-    /**
-     * @description Public product categories. Anyone can read, only admins can write.
-     * @path /categories/{categoryId}
-     * @allow (get) Any user, signed in or not, reading a category document.
-     * @deny (create) A non-admin user trying to create a new category.
-     * @principle Public read access with administrator-only writes for global data.
-     */
-    match /categories/{categoryId} {
-      allow get, list: if true;
-      allow create: if isAdmin();
-      allow update: if isExistingAdmin();
-      allow delete: if isExistingAdmin();
+
+    match /customers/{customerId}/orders/{orderId}/items/{orderItemId} {
+      allow get, list: if isOwnerOrAdmin(customerId);
+      allow create: if isOwner(customerId);
+      allow update, delete: if isOwnerOrAdmin(customerId) && resource != null;
     }
-    
+
     /**
-     * @description Public product listings. Anyone can read, only admins can write.
+     * @description Product catalog rules.
      * @path /products/{productId}
-     * @allow (list) Any user, signed in or not, listing all available products.
-     * @deny (update) A non-admin user trying to change a product's price.
-     * @principle Public read access with administrator-only writes for global data.
+     * @allow (get, list) Publicly readable for all users.
+     * @deny (write) Only administrative users can modify product data.
+     * @principle Public consumption with secure, centralized management.
      */
     match /products/{productId} {
       allow get, list: if true;
-      allow create: if isAdmin();
-      allow update: if isExistingAdmin();
-      allow delete: if isExistingAdmin();
-    }
-    
-    /**
-     * @description Administrator role management. Used for Database-Backed Access Control.
-     *              Only admins can see who other admins are. Writes are disallowed from the client.
-     * @path /roles_admin/{adminId}
-     * @allow (get) An admin with UID 'admin_abc' checking if 'user_xyz' is an admin at `/roles_admin/user_xyz`.
-     * @deny (list) A non-admin user trying to list all administrators.
-     * @deny (create) Any user trying to make themselves an admin via the client.
-     * @principle Secures role-based access control by making the role list readable only by admins and immutable from the client.
-     */
-    match /roles_admin/{adminId} {
-      allow get, list: if isAdmin();
-      allow create: if false;
-      allow update: if false;
-      allow delete: if false;
+      allow create, update, delete: if isAdmin();
     }
   }
 }
