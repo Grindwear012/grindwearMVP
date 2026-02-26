@@ -2,24 +2,30 @@
 
 import { useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { getProducts } from '@/lib/products';
 import ProductCard from '@/components/product-card';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import Image from 'next/image';
 import { Input } from '@/components/ui/input';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { collection } from 'firebase/firestore';
+import type { Product } from '@/lib/types';
+import { Loader2 } from 'lucide-react';
 
 export default function ProductsPageContent() {
   const searchParams = useSearchParams();
   const category = searchParams.get('category');
   const [searchTerm, setSearchTerm] = useState('');
 
-  const products = getProducts();
-  const categoryFilteredProducts = category
+  const db = useFirestore();
+  const productsRef = useMemoFirebase(() => collection(db, 'products'), [db]);
+  const { data: products, isLoading } = useCollection<Product>(productsRef);
+
+  const categoryFilteredProducts = category && products
     ? products.filter(
         (p) => p.category.toLowerCase() === category.toLowerCase()
       )
-    : products;
+    : (products || []);
 
   const filteredProducts = searchTerm
     ? categoryFilteredProducts.filter((product) =>
@@ -41,7 +47,6 @@ export default function ProductsPageContent() {
   } else if (categoryLower === 'accessories') {
     heroImageId = 'accessories-category-hero';
   } else {
-    // A generic fallback for "All Products" or other categories
     heroImageId = 'denim-jacket-1';
   }
 
@@ -78,30 +83,39 @@ export default function ProductsPageContent() {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <h2 className="mb-8 text-center text-3xl font-bold">
-            {filteredProducts.length > 0
-              ? `${title} Collection`
-              : `No Products Found`}
-          </h2>
-          {filteredProducts.length > 0 ? (
-            <div className="relative">
-              <ScrollArea>
-                <div className="flex space-x-3 pb-4">
-                  {filteredProducts.map((product) => (
-                    <div key={product.id} className="w-[140px] shrink-0">
-                      <ProductCard product={product} />
-                    </div>
-                  ))}
-                </div>
-                <ScrollBar orientation="horizontal" />
-              </ScrollArea>
+          
+          {isLoading ? (
+            <div className="flex justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
             </div>
           ) : (
-            <p className="text-center text-muted-foreground">
-              {searchTerm
-                ? 'Try adjusting your search.'
-                : 'Check back soon for new arrivals!'}
-            </p>
+            <>
+              <h2 className="mb-8 text-center text-3xl font-bold">
+                {filteredProducts.length > 0
+                  ? `${title} Collection`
+                  : `No Products Found`}
+              </h2>
+              {filteredProducts.length > 0 ? (
+                <div className="relative">
+                  <ScrollArea>
+                    <div className="flex space-x-3 pb-4">
+                      {filteredProducts.map((product) => (
+                        <div key={product.id} className="w-[140px] shrink-0">
+                          <ProductCard product={product} />
+                        </div>
+                      ))}
+                    </div>
+                    <ScrollBar orientation="horizontal" />
+                  </ScrollArea>
+                </div>
+              ) : (
+                <p className="text-center text-muted-foreground">
+                  {searchTerm
+                    ? 'Try adjusting your search.'
+                    : 'Check back soon for new arrivals!'}
+                </p>
+              )}
+            </>
           )}
         </section>
       </div>

@@ -41,7 +41,7 @@ import {
 } from '@/components/ui/dialog';
 import { Plus, Pencil, Trash2, Loader2 } from 'lucide-react';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, serverTimestamp } from 'firebase/firestore';
+import { collection, serverTimestamp, doc } from 'firebase/firestore';
 import { addDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import type { Product } from '@/lib/types';
 
@@ -62,7 +62,6 @@ export default function AdminProductsTab() {
   const db = useFirestore();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
 
-  // Memoize products collection reference
   const productsRef = useMemoFirebase(() => collection(db, 'products'), [db]);
   const { data: products, isLoading } = useCollection<Product>(productsRef);
 
@@ -84,12 +83,11 @@ export default function AdminProductsTab() {
   function onSubmit(values: z.infer<typeof productSchema>) {
     if (!db) return;
 
-    // Transform comma-separated strings into arrays
     const sizesArray = values.sizes.split(',').map((s) => s.trim()).filter(Boolean);
     const colorsArray = values.colors.split(',').map((c) => c.trim()).filter(Boolean);
     const imagesArray = values.images.split(',').map((url) => ({
       url: url.trim(),
-      hint: values.name.toLowerCase(), // Use product name as hint for GenAI/Accessibility
+      hint: values.name.toLowerCase(),
     })).filter((img) => img.url);
 
     const productData = {
@@ -102,7 +100,7 @@ export default function AdminProductsTab() {
       sizes: sizesArray,
       colors: colorsArray,
       images: imagesArray,
-      rating: 5.0, // Initial default rating
+      rating: 5.0,
       reviews: 0,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
@@ -121,15 +119,13 @@ export default function AdminProductsTab() {
 
   const handleDelete = (productId: string, productName: string) => {
     if (!db) return;
-    // Note: In a real app, use a confirmation dialog
-    const docRef = collection(db, 'products');
-    // Using simple document reference for delete
-    const { doc } = require('firebase/firestore');
-    deleteDocumentNonBlocking(doc(db, 'products', productId));
+    
+    const productRef = doc(db, 'products', productId);
+    deleteDocumentNonBlocking(productRef);
     
     toast({
       title: 'Deleting Product',
-      description: `${productName} is being removed.`,
+      description: `${productName} is being removed from the store.`,
     });
   };
 
