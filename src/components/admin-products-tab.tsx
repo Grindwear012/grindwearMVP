@@ -23,7 +23,6 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { getProducts } from '@/lib/products';
 import {
   Table,
   TableBody,
@@ -40,7 +39,11 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { Plus, Pencil, Trash2 } from 'lucide-react';
+import { Plus, Pencil, Trash2, Loader2 } from 'lucide-react';
+import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { collection, serverTimestamp } from 'firebase/firestore';
+import { addDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import type { Product } from '@/lib/types';
 
 const productSchema = z.object({
   name: z.string().min(1, 'Product name is required'),
@@ -48,6 +51,7 @@ const productSchema = z.object({
   longDescription: z.string().min(1, 'Long description is required'),
   price: z.coerce.number().min(0, 'Price must be a positive number'),
   category: z.string().min(1, 'Category is required'),
+  brand: z.string().min(1, 'Brand is required'),
   sizes: z.string().min(1, 'Please provide comma-separated sizes'),
   colors: z.string().min(1, 'Please provide comma-separated colors'),
   images: z.string().min(1, 'Please provide comma-separated image URLs'),
@@ -55,8 +59,12 @@ const productSchema = z.object({
 
 export default function AdminProductsTab() {
   const { toast } = useToast();
+  const db = useFirestore();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const products = getProducts();
+
+  // Memoize products collection reference
+  const productsRef = useMemoFirebase(() => collection(db, 'products'), [db]);
+  const { data: products, isLoading } = useCollection<Product>(productsRef);
 
   const form = useForm<z.infer<typeof productSchema>>({
     resolver: zodResolver(productSchema),
@@ -66,6 +74,7 @@ export default function AdminProductsTab() {
       longDescription: '',
       price: 0,
       category: '',
+      brand: '',
       sizes: '',
       colors: '',
       images: '',
@@ -73,15 +82,56 @@ export default function AdminProductsTab() {
   });
 
   function onSubmit(values: z.infer<typeof productSchema>) {
-    // In a real app, this would update Firestore.
-    console.log('New product submitted:', values);
+    if (!db) return;
+
+    // Transform comma-separated strings into arrays
+    const sizesArray = values.sizes.split(',').map((s) => s.trim()).filter(Boolean);
+    const colorsArray = values.colors.split(',').map((c) => c.trim()).filter(Boolean);
+    const imagesArray = values.images.split(',').map((url) => ({
+      url: url.trim(),
+      hint: values.name.toLowerCase(), // Use product name as hint for GenAI/Accessibility
+    })).filter((img) => img.url);
+
+    const productData = {
+      name: values.name,
+      brand: values.brand,
+      description: values.description,
+      longDescription: values.longDescription,
+      price: values.price,
+      category: values.category,
+      sizes: sizesArray,
+      colors: colorsArray,
+      images: imagesArray,
+      rating: 5.0, // Initial default rating
+      reviews: 0,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    };
+
+    addDocumentNonBlocking(collection(db, 'products'), productData);
+
     toast({
       title: 'Product Added!',
-      description: `${values.name} has been added to the store inventory.`,
+      description: `${values.name} is being added to the database.`,
     });
+
     form.reset();
     setIsAddDialogOpen(false);
   }
+
+  const handleDelete = (productId: string, productName: string) => {
+    if (!db) return;
+    // Note: In a real app, use a confirmation dialog
+    const docRef = collection(db, 'products');
+    // Using simple document reference for delete
+    const { doc } = require('firebase/firestore');
+    deleteDocumentNonBlocking(doc(db, 'products', productId));
+    
+    toast({
+      title: 'Deleting Product',
+      description: `${productName} is being removed.`,
+    });
+  };
 
   return (
     <div className="space-y-6">
@@ -89,7 +139,7 @@ export default function AdminProductsTab() {
         <div>
           <h2 className="text-2xl font-bold tracking-tight">Products</h2>
           <p className="text-muted-foreground">
-            Manage your store's product inventory.
+            Manage your store's product inventory in real-time.
           </p>
         </div>
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
@@ -115,6 +165,19 @@ export default function AdminProductsTab() {
                       <FormLabel>Product Name</FormLabel>
                       <FormControl>
                         <Input placeholder="e.g., Vintage Denim Jacket" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="brand"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Brand</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g., TCP Originals" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -224,37 +287,55 @@ export default function AdminProductsTab() {
 
       <Card>
         <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Product Name</TableHead>
-                <TableHead>Category</TableHead>
-                <TableHead>Price</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {products.map((product) => (
-                <TableRow key={product.id}>
-                  <TableCell className="font-medium">{product.name}</TableCell>
-                  <TableCell>{product.category}</TableCell>
-                  <TableCell>R{product.price.toFixed(2)}</TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button variant="ghost" size="icon">
-                        <Pencil className="h-4 w-4" />
-                        <span className="sr-only">Edit</span>
-                      </Button>
-                      <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
-                        <Trash2 className="h-4 w-4" />
-                        <span className="sr-only">Delete</span>
-                      </Button>
-                    </div>
-                  </TableCell>
+          {isLoading ? (
+            <div className="flex items-center justify-center p-12">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Product Name</TableHead>
+                  <TableHead>Category</TableHead>
+                  <TableHead>Price</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {products?.map((product) => (
+                  <TableRow key={product.id}>
+                    <TableCell className="font-medium">{product.name}</TableCell>
+                    <TableCell>{product.category}</TableCell>
+                    <TableCell>R{product.price.toFixed(2)}</TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-2">
+                        <Button variant="ghost" size="icon">
+                          <Pencil className="h-4 w-4" />
+                          <span className="sr-only">Edit</span>
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="text-destructive hover:text-destructive"
+                          onClick={() => handleDelete(product.id, product.name)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          <span className="sr-only">Delete</span>
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {!isLoading && products?.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={4} className="h-24 text-center text-muted-foreground">
+                      No products found in the database. Add your first product above.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
     </div>
