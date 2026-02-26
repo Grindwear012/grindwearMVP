@@ -7,31 +7,20 @@ import { getFirestore } from 'firebase/firestore'
 
 /**
  * Initializes Firebase Client SDK.
- * Prioritizes explicit config to avoid 'app/no-options' errors during SSR/Build.
+ * Optimized for Next.js App Router (SSR, Build, and Client-side).
  */
 export function initializeFirebase() {
   const apps = getApps();
+  
+  // If an app is already initialized, reuse it.
   if (apps.length > 0) {
     return getSdks(apps[0]);
   }
 
-  let firebaseApp: FirebaseApp;
-  try {
-    // During build time and SSR, we use the explicit config to ensure stability.
-    firebaseApp = initializeApp(firebaseConfig);
-  } catch (e: any) {
-    if (e.code === 'app/duplicate-app') {
-      firebaseApp = getApp();
-    } else {
-      // Fallback to automatic discovery (preferred by App Hosting at runtime)
-      try {
-        firebaseApp = initializeApp();
-      } catch (innerError) {
-        console.error('Firebase initialization failed:', e, innerError);
-        throw e;
-      }
-    }
-  }
+  // Always use the explicit config during build and on the client for maximum reliability.
+  // Providing the public config here ensures 'next build' and SSR work without 
+  // environment-specific crashes or discovery warnings.
+  const firebaseApp = initializeApp(firebaseConfig);
 
   return getSdks(firebaseApp);
 }
