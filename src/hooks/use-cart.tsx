@@ -6,9 +6,13 @@ import React, {
   useState,
   useEffect,
   useCallback,
+  useMemo,
 } from 'react';
 import type { CartItem, Product } from '@/lib/types';
 import { useToast } from './use-toast';
+import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { collection, doc, deleteDoc, writeBatch } from 'firebase/firestore';
+import { setDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 
 interface CartContextType {
   cartItems: CartItem[];
@@ -18,6 +22,7 @@ interface CartContextType {
   clearCart: () => void;
   cartCount: number;
   totalPrice: number;
+  isLoading: boolean;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -25,81 +30,149 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const { user, isUserLoading } = useUser();
+  const db = useFirestore();
   const { toast } = useToast();
+  
+  // Local state for guest users
+  const [localCartItems, setLocalCartItems] = useState<CartItem[]>([]);
 
+  // Firestore reference for logged-in user's cart
+  // We use a fixed 'default' cart ID for simplicity in the MVP
+  const cartItemsRef = useMemoFirebase(() => {
+    if (!db || !user?.uid) return null;
+    return collection(db, 'customers', user.uid, 'carts', 'default', 'items');
+  }, [db, user?.uid]);
+
+  const { data: firestoreCartItems, isLoading: isFirestoreLoading } = useCollection<CartItem>(cartItemsRef);
+
+  // Initialize local cart from localStorage on mount
   useEffect(() => {
     const storedCart = localStorage.getItem('cart');
     if (storedCart) {
-      setCartItems(JSON.parse(storedCart));
+      try {
+        setLocalCartItems(JSON.parse(storedCart));
+      } catch (e) {
+        console.error("Failed to parse local cart", e);
+      }
     }
   }, []);
 
+  // Update localStorage when local cart changes
   useEffect(() => {
-    localStorage.setItem('cart', JSON.stringify(cartItems));
-  }, [cartItems]);
+    if (!user) {
+      localStorage.setItem('cart', JSON.stringify(localCartItems));
+    }
+  }, [localCartItems, user]);
+
+  // Determine active cart items
+  const cartItems = useMemo(() => {
+    if (user) {
+      return firestoreCartItems || [];
+    }
+    return localCartItems;
+  }, [user, firestoreCartItems, localCartItems]);
 
   const addToCart = useCallback(
     (product: Product, size: string, color: string) => {
-      setCartItems((prevItems) => {
-        const existingItem = prevItems.find(
-          (item) =>
-            item.product.id === product.id &&
-            item.size === size &&
-            item.color === color
-        );
+      const itemId = `${product.id}-${size}-${color}`;
+      const existingItem = cartItems.find((item) => item.id === itemId);
 
-        if (existingItem) {
-          return prevItems.map((item) =>
-            item.id === existingItem.id
-              ? { ...item, quantity: item.quantity + 1 }
-              : item
-          );
-        } else {
-          const newItem: CartItem = {
-            id: `${product.id}-${size}-${color}`,
-            product,
-            size,
-            color,
-            quantity: 1,
-          };
-          return [...prevItems, newItem];
-        }
-      });
+      if (user && db && cartItemsRef) {
+        // Update Firestore
+        const docRef = doc(db, cartItemsRef.path, itemId);
+        const newQuantity = existingItem ? existingItem.quantity + 1 : 1;
+        
+        setDocumentNonBlocking(docRef, {
+          id: itemId,
+          product,
+          size,
+          color,
+          quantity: newQuantity,
+          addedAt: new Date().toISOString(),
+        }, { merge: true });
+      } else {
+        // Update Local State
+        setLocalCartItems((prevItems) => {
+          if (existingItem) {
+            return prevItems.map((item) =>
+              item.id === itemId
+                ? { ...item, quantity: item.quantity + 1 }
+                : item
+            );
+          } else {
+            const newItem: CartItem = {
+              id: itemId,
+              product,
+              size,
+              color,
+              quantity: 1,
+            };
+            return [...prevItems, newItem];
+          }
+        });
+      }
+
       toast({
         title: 'Added to cart!',
         description: `${product.name} has been added to your cart.`,
       });
     },
-    [toast]
+    [user, db, cartItemsRef, cartItems, toast]
   );
 
   const removeFromCart = useCallback((itemId: string) => {
-    setCartItems((prevItems) => prevItems.filter((item) => item.id !== itemId));
+    if (user && db && cartItemsRef) {
+      const docRef = doc(db, cartItemsRef.path, itemId);
+      deleteDocumentNonBlocking(docRef);
+    } else {
+      setLocalCartItems((prevItems) => prevItems.filter((item) => item.id !== itemId));
+    }
+    
     toast({
       title: 'Item removed',
       description: 'The item has been removed from your cart.',
     });
-  }, [toast]);
+  }, [user, db, cartItemsRef, toast]);
 
   const updateQuantity = useCallback((itemId: string, quantity: number) => {
-    setCartItems((prevItems) =>
-      prevItems.map((item) =>
-        item.id === itemId ? { ...item, quantity: Math.max(0, quantity) } : item
-      ).filter(item => item.quantity > 0)
-    );
-  }, []);
+    const newQuantity = Math.max(0, quantity);
+    
+    if (user && db && cartItemsRef) {
+      const docRef = doc(db, cartItemsRef.path, itemId);
+      if (newQuantity === 0) {
+        deleteDocumentNonBlocking(docRef);
+      } else {
+        updateDocumentNonBlocking(docRef, { quantity: newQuantity });
+      }
+    } else {
+      setLocalCartItems((prevItems) =>
+        prevItems.map((item) =>
+          item.id === itemId ? { ...item, quantity: newQuantity } : item
+        ).filter(item => item.quantity > 0)
+      );
+    }
+  }, [user, db, cartItemsRef]);
 
   const clearCart = useCallback(() => {
-    setCartItems([]);
-  }, []);
+    if (user && db && cartItemsRef && firestoreCartItems) {
+      const batch = writeBatch(db);
+      firestoreCartItems.forEach((item) => {
+        const docRef = doc(db, cartItemsRef.path, item.id);
+        batch.delete(docRef);
+      });
+      batch.commit();
+    } else {
+      setLocalCartItems([]);
+    }
+  }, [user, db, cartItemsRef, firestoreCartItems]);
 
-  const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+  const cartCount = useMemo(() => cartItems.reduce((sum, item) => sum + item.quantity, 0), [cartItems]);
 
-  const totalPrice = cartItems.reduce(
+  const totalPrice = useMemo(() => cartItems.reduce(
     (sum, item) => sum + item.product.price * item.quantity,
     0
-  );
+  ), [cartItems]);
 
   return (
     <CartContext.Provider
@@ -111,6 +184,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
         clearCart,
         cartCount,
         totalPrice,
+        isLoading: isUserLoading || (!!user && isFirestoreLoading),
       }}
     >
       {children}
