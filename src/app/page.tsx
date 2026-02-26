@@ -8,35 +8,50 @@ import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, limit } from 'firebase/firestore';
 import type { Product } from '@/lib/types';
 import { Loader2 } from 'lucide-react';
+import { useEffect, useRef } from 'react';
 
 export default function HomePage() {
   const db = useFirestore();
-  
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    // Restart video every 6 seconds as requested
+    const interval = setInterval(() => {
+      if (videoRef.current) {
+        videoRef.current.currentTime = 0;
+        videoRef.current.play().catch((err) => {
+          // Playback might be blocked by browser if not interacted with
+          console.debug('Autoplay interaction pending:', err);
+        });
+      }
+    }, 6000);
+
+    return () => clearInterval(interval);
+  }, []);
+
   const bestsellersQuery = useMemoFirebase(() => {
     return query(collection(db, 'products'), limit(6));
   }, [db]);
 
   const { data: bestsellers, isLoading: isBestsellersLoading } = useCollection<Product>(bestsellersQuery);
 
-  const heroImage = PlaceHolderImages.find((img) => img.id === 'hero-model');
   const hoodieCategoryImg = PlaceHolderImages.find((img) => img.id === 'graphic-hoodie-1');
   const teeCategoryImg = PlaceHolderImages.find((img) => img.id === 'vintage-tee-1');
 
   return (
     <div className="bg-background">
-      {/* Hero Section */}
-      {heroImage && (
-        <div className="relative h-[50vh] w-full bg-muted md:h-[calc(100vh-80px)]">
-          <Image
-            src={heroImage.imageUrl}
-            alt="Model wearing thrifted clothes"
-            fill
-            className="object-cover"
-            data-ai-hint={heroImage.imageHint}
-            priority
-          />
-        </div>
-      )}
+      {/* Hero Section with Video */}
+      <div className="relative h-[50vh] w-full bg-black md:h-[calc(100vh-80px)] overflow-hidden">
+        <video
+          ref={videoRef}
+          src="https://res.cloudinary.com/dxz2bkns2/video/upload/v1772115808/POP_VID_FOR_TCP_et9xt4.mp4"
+          className="absolute inset-0 h-full w-full object-cover opacity-90"
+          autoPlay
+          muted
+          playsInline
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-background" />
+      </div>
 
       <div className="container mx-auto px-4 py-12 md:py-20">
         {/* Summer Collection Section */}
