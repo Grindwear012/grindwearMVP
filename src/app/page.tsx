@@ -45,12 +45,11 @@ export default function HomePage() {
         <video
           ref={videoRef}
           src="https://res.cloudinary.com/dxz2bkns2/video/upload/v1772115808/POP_VID_FOR_TCP_et9xt4.mp4"
-          className="absolute inset-0 h-full w-full object-cover opacity-90"
+          className="absolute inset-0 h-full w-full object-cover"
           autoPlay
           muted
           playsInline
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-background" />
       </div>
 
       <div className="container mx-auto px-4 py-12 md:py-20">
