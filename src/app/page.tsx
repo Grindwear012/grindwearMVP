@@ -40,17 +40,6 @@ export default function HomePage() {
             data-ai-hint={heroImage.imageHint}
             priority
           />
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 text-center">
-            <h1 className="text-4xl font-bold tracking-tighter text-white sm:text-6xl md:text-7xl uppercase">
-              Sustainable Style
-            </h1>
-            <p className="mt-4 max-w-md text-lg text-white/90">
-              Discover unique, pre-loved pieces and redefine your wardrobe.
-            </p>
-            <Button asChild size="lg" className="mt-6">
-              <Link href="/products">Shop Now</Link>
-            </Button>
-          </div>
         </div>
       )}
 
