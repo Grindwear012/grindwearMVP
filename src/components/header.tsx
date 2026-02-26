@@ -97,9 +97,11 @@ export default function Header() {
         {/* Center Section */}
         <div className="flex flex-none items-center justify-center">
           <ClientOnly>
-            <p className="font-anton text-lg italic tracking-wider sm:text-xl">
-              THRIFT CLOTHING PLUG
-            </p>
+            <Link href="/" className="hover:opacity-80 transition-opacity">
+              <p className="font-anton text-lg italic tracking-wider sm:text-xl">
+                THRIFT CLOTHING PLUG
+              </p>
+            </Link>
           </ClientOnly>
         </div>
 
