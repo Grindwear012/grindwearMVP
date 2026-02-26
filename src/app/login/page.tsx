@@ -28,7 +28,7 @@ import {
   initiateEmailSignIn,
   initiateEmailSignUp,
 } from '@/firebase/non-blocking-login';
-import { useAuth, useUser } from '@/firebase';
+import { useAuth, useFirestore, useUser } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
@@ -47,6 +47,7 @@ const signUpSchema = z.object({
 
 export default function LoginPage() {
   const auth = useAuth();
+  const db = useFirestore();
   const { user, isUserLoading } = useUser();
   const router = useRouter();
   const { toast } = useToast();
@@ -77,7 +78,7 @@ export default function LoginPage() {
   }
 
   function onSignUpSubmit(values: z.infer<typeof signUpSchema>) {
-    initiateEmailSignUp(auth, values.email, values.password);
+    initiateEmailSignUp(auth, db, values.name, values.email, values.password);
     toast({
       title: 'Creating Account...',
       description: 'Please wait while we create your account.',
@@ -93,7 +94,7 @@ export default function LoginPage() {
   }
 
   if (user) {
-    return null; // Or a loading spinner, as the redirect will happen shortly
+    return null;
   }
 
   return (
@@ -175,7 +176,7 @@ export default function LoginPage() {
                   >
                     Sign In
                   </Button>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-xs text-muted-foreground text-center">
                     Forgot your password?{' '}
                     <Link href="#" className="underline hover:text-primary">
                       Reset it
@@ -271,7 +272,7 @@ export default function LoginPage() {
                   >
                     Create Account
                   </Button>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-xs text-muted-foreground text-center">
                     By signing up, you agree to our{' '}
                     <Link href="#" className="underline hover:text-primary">
                       Terms of Service

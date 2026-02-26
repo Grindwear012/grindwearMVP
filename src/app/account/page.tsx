@@ -20,19 +20,72 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useUser } from '@/firebase';
+import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { updateProfile } from 'firebase/auth';
+import { doc, updateDoc } from 'firebase/firestore';
+import { useToast } from '@/hooks/use-toast';
 
 export default function AccountPage() {
   const { user, isUserLoading } = useUser();
+  const db = useFirestore();
   const router = useRouter();
+  const { toast } = useToast();
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Memoize the customer doc reference
+  const customerRef = useMemoFirebase(() => {
+    if (!db || !user?.uid) return null;
+    return doc(db, 'customers', user.uid);
+  }, [db, user?.uid]);
+
+  const { data: customerData, isLoading: isCustomerLoading } = useDoc(customerRef);
 
   useEffect(() => {
     if (!isUserLoading && !user) {
       router.push('/login');
     }
   }, [user, isUserLoading, router]);
+
+  const handleUpdateProfile = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!user || !db) return;
+
+    const formData = new FormData(e.currentTarget);
+    const name = formData.get('name') as string;
+
+    setIsSaving(true);
+    try {
+      // Update Auth display name
+      await updateProfile(user, { displayName: name });
+
+      // Update Firestore Customer record
+      const [firstName, ...lastNameParts] = name.split(' ');
+      const lastName = lastNameParts.join(' ') || '';
+
+      if (customerRef) {
+        await updateDoc(customerRef, {
+          firstName,
+          lastName,
+          updatedAt: new Date().toISOString(),
+        });
+      }
+
+      toast({
+        title: 'Profile Updated',
+        description: 'Your changes have been saved successfully.',
+      });
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Update Failed',
+        description: error.message || 'Could not update profile.',
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   if (isUserLoading || !user) {
     return (
@@ -42,14 +95,13 @@ export default function AccountPage() {
     );
   }
 
-
   const mockOrders = [
     { id: 'ORD001', date: '2023-10-26', total: 'R120.00', status: 'Shipped' },
     { id: 'ORD002', date: '2023-10-20', total: 'R45.00', status: 'Delivered' },
   ];
 
   return (
-    <div className="container mx-auto py-8 md:py-12">
+    <div className="container mx-auto py-8 md:py-12 px-4">
       <h1 className="mb-2 text-3xl font-bold">My Account</h1>
       <p className="text-muted-foreground mb-8">
         Manage your orders, profile, and addresses.
@@ -69,7 +121,6 @@ export default function AccountPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {/* Desktop View */}
               <div className="hidden md:block">
                 <Table>
                   <TableHeader>
@@ -96,7 +147,6 @@ export default function AccountPage() {
                   </TableBody>
                 </Table>
               </div>
-              {/* Mobile View */}
               <div className="space-y-4 md:hidden">
                 {mockOrders.map((order) => (
                   <Card key={order.id} className="w-full">
@@ -131,17 +181,26 @@ export default function AccountPage() {
                 Update your personal information.
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Name</Label>
-                <Input id="name" defaultValue={user.displayName || ''} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" defaultValue={user.email || ''} readOnly />
-              </div>
-               <Button>Save Changes</Button>
-            </CardContent>
+            <form onSubmit={handleUpdateProfile}>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Full Name</Label>
+                  <Input 
+                    id="name" 
+                    name="name" 
+                    defaultValue={customerData ? `${customerData.firstName} ${customerData.lastName}` : user.displayName || ''} 
+                    required 
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input id="email" type="email" defaultValue={user.email || ''} readOnly disabled className="bg-muted" />
+                </div>
+                <Button type="submit" disabled={isSaving}>
+                  {isSaving ? 'Saving...' : 'Save Changes'}
+                </Button>
+              </CardContent>
+            </form>
           </Card>
         </TabsContent>
         <TabsContent value="addresses">
