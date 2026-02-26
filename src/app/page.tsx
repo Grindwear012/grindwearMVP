@@ -64,11 +64,6 @@ export default function HomePage() {
                   data-ai-hint={hoodieCategoryImg.imageHint}
                 />
               )}
-              <div className="absolute inset-0 bg-black/30 flex items-center justify-center transition-colors group-hover:bg-black/40">
-                <h3 className="text-4xl md:text-6xl font-bold text-white uppercase tracking-tighter italic">
-                  Hoodies
-                </h3>
-              </div>
             </Link>
 
             <Link 
@@ -84,11 +79,6 @@ export default function HomePage() {
                   data-ai-hint={teeCategoryImg.imageHint}
                 />
               )}
-              <div className="absolute inset-0 bg-black/30 flex items-center justify-center transition-colors group-hover:bg-black/40">
-                <h3 className="text-4xl md:text-6xl font-bold text-white uppercase tracking-tighter italic">
-                  T-shirts
-                </h3>
-              </div>
             </Link>
           </div>
         </section>
