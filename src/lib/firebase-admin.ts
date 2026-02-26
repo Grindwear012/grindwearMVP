@@ -13,7 +13,7 @@ let adminApp: App;
 const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
 
 // Check for required variables and existing apps to avoid crashes during build
-if (!getApps().length && process.env.FIREBASE_PROJECT_ID && privateKey) {
+if (!getApps().length && process.env.FIREBASE_PROJECT_ID && privateKey && process.env.FIREBASE_CLIENT_EMAIL) {
   try {
     adminApp = initializeApp({
       credential: cert({

@@ -8,6 +8,7 @@ import { getFirestore } from 'firebase/firestore'
 /**
  * Initializes Firebase Client SDK.
  * Optimized for Next.js App Router (SSR, Build, and Client-side).
+ * Always uses explicit config to prevent build-time discovery errors.
  */
 export function initializeFirebase() {
   const apps = getApps();
@@ -17,9 +18,8 @@ export function initializeFirebase() {
     return getSdks(apps[0]);
   }
 
-  // Always use the explicit config during build and on the client for maximum reliability.
-  // Providing the public config here ensures 'next build' and SSR work without 
-  // environment-specific crashes or discovery warnings.
+  // Explicitly passing firebaseConfig prevents "app/no-options" errors
+  // during Next.js static generation (build time).
   const firebaseApp = initializeApp(firebaseConfig);
 
   return getSdks(firebaseApp);
