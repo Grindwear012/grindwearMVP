@@ -20,12 +20,43 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase } from '@/firebase';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { updateProfile } from 'firebase/auth';
-import { doc, updateDoc } from 'firebase/firestore';
+import { doc, updateDoc, collection } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { addDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { Loader2, MapPin, Trash2 } from 'lucide-react';
+
+const addressSchema = z.object({
+  street1: z.string().min(1, 'Street address is required'),
+  street2: z.string().optional(),
+  city: z.string().min(1, 'City is required'),
+  state: z.string().min(1, 'State is required'),
+  postalCode: z.string().min(1, 'Postal code is required'),
+  country: z.string().min(1, 'Country is required'),
+  addressType: z.string().min(1, 'Address type is required'),
+});
 
 export default function AccountPage() {
   const { user, isUserLoading } = useUser();
@@ -33,6 +64,7 @@ export default function AccountPage() {
   const router = useRouter();
   const { toast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
+  const [isAddressDialogOpen, setIsAddressDialogOpen] = useState(false);
 
   // Memoize the customer doc reference
   const customerRef = useMemoFirebase(() => {
@@ -42,11 +74,42 @@ export default function AccountPage() {
 
   const { data: customerData, isLoading: isCustomerLoading } = useDoc(customerRef);
 
+  // Memoize the addresses collection reference
+  const addressesRef = useMemoFirebase(() => {
+    if (!db || !user?.uid) return null;
+    return collection(db, 'customers', user.uid, 'addresses');
+  }, [db, user?.uid]);
+
+  const { data: addresses, isLoading: isAddressesLoading } = useCollection(addressesRef);
+
+  const addressForm = useForm<z.infer<typeof addressSchema>>({
+    resolver: zodResolver(addressSchema),
+    defaultValues: {
+      street1: '',
+      street2: '',
+      city: '',
+      state: '',
+      postalCode: '',
+      country: '',
+      addressType: 'shipping',
+    },
+  });
+
   useEffect(() => {
     if (!isUserLoading && !user) {
       router.push('/login');
     }
   }, [user, isUserLoading, router]);
+
+  // Notification for missing address
+  useEffect(() => {
+    if (!isUserLoading && user && !isAddressesLoading && addresses && addresses.length === 0) {
+      toast({
+        title: 'Welcome back!',
+        description: 'Please add a shipping address to your profile for faster checkout.',
+      });
+    }
+  }, [user, isUserLoading, isAddressesLoading, addresses, toast]);
 
   const handleUpdateProfile = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -57,10 +120,8 @@ export default function AccountPage() {
 
     setIsSaving(true);
     try {
-      // Update Auth display name
       await updateProfile(user, { displayName: name });
 
-      // Update Firestore Customer record
       const [firstName, ...lastNameParts] = name.split(' ');
       const lastName = lastNameParts.join(' ') || '';
 
@@ -87,9 +148,41 @@ export default function AccountPage() {
     }
   };
 
+  const onAddressSubmit = (values: z.infer<typeof addressSchema>) => {
+    if (!addressesRef || !user) return;
+
+    const addressData = {
+      ...values,
+      customerId: user.uid,
+      isDefaultShipping: addresses?.length === 0,
+      isDefaultBilling: addresses?.length === 0,
+    };
+
+    addDocumentNonBlocking(addressesRef, addressData);
+    
+    toast({
+      title: 'Address Added',
+      description: 'Your new address has been saved.',
+    });
+    
+    addressForm.reset();
+    setIsAddressDialogOpen(false);
+  };
+
+  const handleDeleteAddress = (addressId: string) => {
+    if (!db || !user) return;
+    const addressRef = doc(db, 'customers', user.uid, 'addresses', addressId);
+    deleteDocumentNonBlocking(addressRef);
+    toast({
+      title: 'Address Deleted',
+      description: 'The address has been removed.',
+    });
+  };
+
   if (isUserLoading || !user) {
     return (
-      <div className="container mx-auto py-12 text-center">
+      <div className="container mx-auto py-12 flex flex-col items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin mb-4" />
         <p>Loading account details...</p>
       </div>
     );
@@ -205,22 +298,135 @@ export default function AccountPage() {
         </TabsContent>
         <TabsContent value="addresses">
           <Card>
-            <CardHeader>
-              <CardTitle>Addresses</CardTitle>
-              <CardDescription>
-                Manage your shipping addresses.
-              </CardDescription>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle>Addresses</CardTitle>
+                <CardDescription>
+                  Manage your shipping and billing addresses.
+                </CardDescription>
+              </div>
+              <Dialog open={isAddressDialogOpen} onOpenChange={setIsAddressDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button size="sm">Add New</Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>Add New Address</DialogTitle>
+                    <DialogDescription>
+                      Enter your shipping details below.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <Form {...addressForm}>
+                    <form onSubmit={addressForm.handleSubmit(onAddressSubmit)} className="space-y-4">
+                      <FormField
+                        control={addressForm.control}
+                        name="street1"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Street Address</FormLabel>
+                            <FormControl>
+                              <Input placeholder="123 Main St" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={addressForm.control}
+                        name="city"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>City</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Anytown" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <div className="grid grid-cols-2 gap-4">
+                        <FormField
+                          control={addressForm.control}
+                          name="state"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>State/Province</FormLabel>
+                              <FormControl>
+                                <Input placeholder="CA" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={addressForm.control}
+                          name="postalCode"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Postal Code</FormLabel>
+                              <FormControl>
+                                <Input placeholder="12345" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                      <FormField
+                        control={addressForm.control}
+                        name="country"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Country</FormLabel>
+                            <FormControl>
+                              <Input placeholder="USA" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <Button type="submit" className="w-full">Save Address</Button>
+                    </form>
+                  </Form>
+                </DialogContent>
+              </Dialog>
             </CardHeader>
             <CardContent className="space-y-4">
-               <div className="border rounded-lg p-4">
-                  <p className="font-semibold">{user.displayName || 'Default User'}</p>
-                  <p className="text-muted-foreground">123 Main St, Anytown, USA 12345</p>
-                  <div className="mt-2 space-x-2">
-                    <Button variant="outline" size="sm">Edit</Button>
-                    <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive">Delete</Button>
-                  </div>
-               </div>
-               <Button>Add New Address</Button>
+               {isAddressesLoading ? (
+                 <div className="flex justify-center p-8">
+                   <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                 </div>
+               ) : (
+                 <div className="grid gap-4">
+                   {addresses?.map((address) => (
+                     <div key={address.id} className="border rounded-lg p-4 flex justify-between items-start">
+                        <div className="flex gap-3">
+                          <MapPin className="h-5 w-5 text-muted-foreground mt-0.5" />
+                          <div>
+                            <p className="font-semibold capitalize">{address.addressType} Address</p>
+                            <p className="text-muted-foreground">{address.street1}</p>
+                            <p className="text-muted-foreground">{address.city}, {address.state} {address.postalCode}</p>
+                            <p className="text-muted-foreground">{address.country}</p>
+                          </div>
+                        </div>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                          onClick={() => handleDeleteAddress(address.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                     </div>
+                   ))}
+                   {!isAddressesLoading && addresses?.length === 0 && (
+                     <div className="text-center py-8 border-2 border-dashed rounded-lg">
+                        <MapPin className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+                        <p className="text-muted-foreground">No addresses saved yet.</p>
+                     </div>
+                   )}
+                 </div>
+               )}
             </CardContent>
           </Card>
         </TabsContent>
