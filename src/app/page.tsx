@@ -18,7 +18,6 @@ export default function HomePage() {
   }, [db]);
   
   const summerCollectionQuery = useMemoFirebase(() => {
-    // For now just getting another set of products
     return query(collection(db, 'products'), limit(10));
   }, [db]);
 
@@ -26,6 +25,8 @@ export default function HomePage() {
   const { data: summerCollection, isLoading: isSummerLoading } = useCollection<Product>(summerCollectionQuery);
 
   const heroImage = PlaceHolderImages.find((img) => img.id === 'hero-model');
+  const hoodieCategoryImg = PlaceHolderImages.find((img) => img.id === 'graphic-hoodie-1');
+  const teeCategoryImg = PlaceHolderImages.find((img) => img.id === 'vintage-tee-1');
 
   return (
     <div className="bg-background">
@@ -78,6 +79,51 @@ export default function HomePage() {
               </ScrollArea>
             </div>
           )}
+        </section>
+
+        {/* Category Navigation Section */}
+        <section className="mb-16 md:mb-24">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <Link 
+              href="/products?category=Hoodies" 
+              className="group relative h-[300px] md:h-[400px] overflow-hidden rounded-2xl bg-muted"
+            >
+              {hoodieCategoryImg && (
+                <Image
+                  src={hoodieCategoryImg.imageUrl}
+                  alt="Hoodies Collection"
+                  fill
+                  className="object-cover transition-transform duration-500 group-hover:scale-105"
+                  data-ai-hint={hoodieCategoryImg.imageHint}
+                />
+              )}
+              <div className="absolute inset-0 bg-black/30 flex items-center justify-center transition-colors group-hover:bg-black/40">
+                <h3 className="text-4xl md:text-6xl font-bold text-white uppercase tracking-tighter italic">
+                  Hoodies
+                </h3>
+              </div>
+            </Link>
+
+            <Link 
+              href="/products?category=T-shirts" 
+              className="group relative h-[300px] md:h-[400px] overflow-hidden rounded-2xl bg-muted"
+            >
+              {teeCategoryImg && (
+                <Image
+                  src={teeCategoryImg.imageUrl}
+                  alt="T-shirts Collection"
+                  fill
+                  className="object-cover transition-transform duration-500 group-hover:scale-105"
+                  data-ai-hint={teeCategoryImg.imageHint}
+                />
+              )}
+              <div className="absolute inset-0 bg-black/30 flex items-center justify-center transition-colors group-hover:bg-black/40">
+                <h3 className="text-4xl md:text-6xl font-bold text-white uppercase tracking-tighter italic">
+                  T-shirts
+                </h3>
+              </div>
+            </Link>
+          </div>
         </section>
 
         {/* Bestsellers Section */}
