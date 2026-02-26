@@ -2,13 +2,13 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { Button } from '@/components/ui/button';
 import ProductCard from '@/components/product-card';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection, query, limit } from 'firebase/firestore';
 import type { Product } from '@/lib/types';
 import { Loader2 } from 'lucide-react';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 
 export default function HomePage() {
   const db = useFirestore();
@@ -19,7 +19,7 @@ export default function HomePage() {
   
   const summerCollectionQuery = useMemoFirebase(() => {
     // For now just getting another set of products
-    return query(collection(db, 'products'), limit(3));
+    return query(collection(db, 'products'), limit(10));
   }, [db]);
 
   const { data: bestsellers, isLoading: isBestsellersLoading } = useCollection<Product>(bestsellersQuery);
@@ -57,25 +57,30 @@ export default function HomePage() {
               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-3 md:gap-8">
-              {summerCollection?.map((product, index) => (
-                <div
-                  key={product.id}
-                  className={`flex items-end ${index === 1 ? 'md:mt-12' : ''}`}
-                >
-                  <ProductCard product={product} />
+            <div className="relative">
+              <ScrollArea className="w-full">
+                <div className="flex space-x-6 pb-6">
+                  {summerCollection?.map((product) => (
+                    <div
+                      key={product.id}
+                      className="w-[260px] md:w-[320px] shrink-0"
+                    >
+                      <ProductCard product={product} />
+                    </div>
+                  ))}
+                  {(!summerCollection || summerCollection.length === 0) && (
+                    <div className="w-full text-center py-12 text-muted-foreground">
+                      Check back soon for our new collection.
+                    </div>
+                  )}
                 </div>
-              ))}
-              {(!summerCollection || summerCollection.length === 0) && (
-                <div className="col-span-full text-center py-12 text-muted-foreground">
-                  Check back soon for our new collection.
-                </div>
-              )}
+                <ScrollBar orientation="horizontal" />
+              </ScrollArea>
             </div>
           )}
         </section>
 
-        {/* Flash Sale Section */}
+        {/* Bestsellers Section */}
         <section id="bestsellers">
           <div className="mb-8 flex items-center justify-between">
             <h2 className="text-3xl font-bold tracking-tighter md:text-4xl uppercase">
