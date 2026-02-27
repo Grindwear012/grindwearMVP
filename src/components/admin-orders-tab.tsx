@@ -18,94 +18,136 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { collectionGroup, query, orderBy } from 'firebase/firestore';
+import { Loader2, Package } from 'lucide-react';
+import type { Order } from '@/lib/types';
+import { format } from 'date-fns';
 
 export default function AdminOrdersTab() {
-    const mockOrders = [
-        { id: 'ORD001', date: '2023-10-26', customer: 'John Doe', total: 'R120.00', status: 'Shipped' },
-        { id: 'ORD002', date: '2023-10-25', customer: 'Jane Smith', total: 'R45.00', status: 'Processing' },
-        { id: 'ORD003', date: '2023-10-25', customer: 'Peter Jones', total: 'R75.50', status: 'Delivered' },
-        { id: 'ORD004', date: '2023-10-24', customer: 'Mary Johnson', total: 'R210.00', status: 'Shipped' },
-        { id: 'ORD005', date: '2023-10-23', customer: 'Chris Lee', total: 'R60.00', status: 'Cancelled' },
-    ];
+  const db = useFirestore();
 
-    const getStatusVariant = (status: string) => {
-        switch (status) {
-            case 'Shipped':
-                return 'default';
-            case 'Processing':
-                return 'secondary';
-            case 'Delivered':
-                return 'outline';
-            case 'Cancelled':
-                return 'destructive';
-            default:
-                return 'default';
-        }
+  // Query all orders across all customers using collectionGroup
+  const ordersQuery = useMemoFirebase(() => {
+    if (!db) return null;
+    return query(collectionGroup(db, 'orders'));
+  }, [db]);
+
+  const { data: orders, isLoading } = useCollection<Order>(ordersQuery);
+
+  const getStatusVariant = (status: string) => {
+    switch (status) {
+      case 'shipped':
+        return 'default';
+      case 'processing':
+        return 'secondary';
+      case 'delivered':
+        return 'outline';
+      case 'cancelled':
+        return 'destructive';
+      case 'pending':
+      default:
+        return 'secondary';
     }
+  };
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   return (
     <Card>
-        <CardHeader>
-            <CardTitle>Order Management</CardTitle>
-            <CardDescription>View and manage all customer orders.</CardDescription>
-        </CardHeader>
-        <CardContent>
-        {/* Desktop View */}
-        <div className="hidden md:block">
-            <Table>
+      <CardHeader>
+        <CardTitle>Order Management</CardTitle>
+        <CardDescription>View and manage all customer orders in real-time.</CardDescription>
+      </CardHeader>
+      <CardContent>
+        {orders && orders.length > 0 ? (
+          <>
+            {/* Desktop View */}
+            <div className="hidden md:block">
+              <Table>
                 <TableHeader>
-                <TableRow>
+                  <TableRow>
                     <TableHead>Order ID</TableHead>
                     <TableHead>Date</TableHead>
                     <TableHead>Customer</TableHead>
                     <TableHead>Total</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead></TableHead>
-                </TableRow>
+                  </TableRow>
                 </TableHeader>
                 <TableBody>
-                {mockOrders.map((order) => (
+                  {orders.map((order) => (
                     <TableRow key={order.id}>
-                        <TableCell className="font-medium">{order.id}</TableCell>
-                        <TableCell>{order.date}</TableCell>
-                        <TableCell>{order.customer}</TableCell>
-                        <TableCell>{order.total}</TableCell>
-                        <TableCell>
-                            <Badge variant={getStatusVariant(order.status) as any}>{order.status}</Badge>
-                        </TableCell>
-                        <TableCell className="text-right">
-                            <Button variant="outline" size="sm">Manage</Button>
-                        </TableCell>
-                    </TableRow>
-                ))}
-                </TableBody>
-            </Table>
-        </div>
-        {/* Mobile View */}
-        <div className="grid grid-cols-1 gap-4 md:hidden">
-            {mockOrders.map((order) => (
-                <Card key={order.id}>
-                    <CardHeader>
-                        <div className="flex items-start justify-between">
-                            <div>
-                                <CardTitle className="text-base">{order.id}</CardTitle>
-                                <CardDescription>{order.customer}</CardDescription>
-                            </div>
-                            <Badge variant={getStatusVariant(order.status) as any}>{order.status}</Badge>
+                      <TableCell className="font-mono text-xs uppercase">
+                        #{order.id.slice(-6)}
+                      </TableCell>
+                      <TableCell>
+                        {order.orderDate ? format(new Date(order.orderDate), 'MMM dd, yyyy') : 'N/A'}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex flex-col">
+                          <span className="font-medium">{order.customerName}</span>
+                          <span className="text-xs text-muted-foreground">{order.customerEmail}</span>
                         </div>
-                        <CardDescription>{order.date}</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <p className="font-semibold">{order.total}</p>
-                    </CardContent>
-                    <CardFooter>
-                        <Button variant="outline" size="sm" className="w-full">Manage</Button>
-                    </CardFooter>
+                      </TableCell>
+                      <TableCell>R{order.totalAmount.toFixed(2)}</TableCell>
+                      <TableCell>
+                        <Badge variant={getStatusVariant(order.status) as any} className="capitalize">
+                          {order.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button variant="outline" size="sm">Manage</Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+            {/* Mobile View */}
+            <div className="grid grid-cols-1 gap-4 md:hidden">
+              {orders.map((order) => (
+                <Card key={order.id}>
+                  <CardHeader>
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <CardTitle className="text-base uppercase font-mono">
+                          #{order.id.slice(-6)}
+                        </CardTitle>
+                        <CardDescription>{order.customerName}</CardDescription>
+                      </div>
+                      <Badge variant={getStatusVariant(order.status) as any} className="capitalize">
+                        {order.status}
+                      </Badge>
+                    </div>
+                    <CardDescription>
+                      {order.orderDate ? format(new Date(order.orderDate), 'MMM dd, yyyy') : 'N/A'}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="font-semibold text-lg">R{order.totalAmount.toFixed(2)}</p>
+                  </CardContent>
+                  <CardFooter>
+                    <Button variant="outline" size="sm" className="w-full">Manage</Button>
+                  </CardFooter>
                 </Card>
-            ))}
-        </div>
-        </CardContent>
+              ))}
+            </div>
+          </>
+        ) : (
+          <div className="text-center py-20 border-2 border-dashed rounded-lg">
+            <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-lg font-medium">No orders found</h3>
+            <p className="text-muted-foreground">Orders will appear here once customers start checking out.</p>
+          </div>
+        )}
+      </CardContent>
     </Card>
   );
 }

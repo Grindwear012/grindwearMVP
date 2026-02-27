@@ -19,6 +19,11 @@ import { Separator } from '@/components/ui/separator';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import Image from 'next/image';
+import { useUser, useFirestore } from '@/firebase';
+import { collection, doc, serverTimestamp } from 'firebase/firestore';
+import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { useState } from 'react';
+import { Loader2 } from 'lucide-react';
 
 const formSchema = z.object({
   email: z.string().email(),
@@ -35,15 +40,18 @@ const formSchema = z.object({
 
 export default function CheckoutPage() {
   const { cartItems, totalPrice, clearCart } = useCart();
+  const { user } = useUser();
+  const db = useFirestore();
   const router = useRouter();
   const { toast } = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      email: '',
-      firstName: '',
-      lastName: '',
+      email: user?.email || '',
+      firstName: user?.displayName?.split(' ')[0] || '',
+      lastName: user?.displayName?.split(' ').slice(1).join(' ') || '',
       address: '',
       city: '',
       zip: '',
@@ -54,18 +62,85 @@ export default function CheckoutPage() {
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log('Order submitted:', values);
-    toast({
-      title: 'Order Placed!',
-      description: 'Thank you for your purchase. Your order is being processed.',
-    });
-    clearCart();
-    router.push('/');
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    if (!user || !db) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'You must be logged in to place an order.',
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      // 1. Create the Order Document Reference
+      const orderRef = doc(collection(db, 'customers', user.uid, 'orders'));
+      const orderId = orderRef.id;
+
+      // 2. Prepare Order Data
+      const orderData = {
+        id: orderId,
+        customerId: user.uid,
+        customerName: `${values.firstName} ${values.lastName}`,
+        customerEmail: values.email,
+        orderDate: new Date().toISOString(),
+        totalAmount: totalPrice + 5, // Total + Shipping
+        status: 'pending',
+        shippingAddress: {
+          street: values.address,
+          city: values.city,
+          zip: values.zip,
+        },
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      };
+
+      // 3. Save Order Document (Non-blocking)
+      setDocumentNonBlocking(orderRef, orderData, { merge: true });
+
+      // 4. Save Order Items (Non-blocking)
+      cartItems.forEach((item) => {
+        const itemRef = doc(collection(db, orderRef.path, 'items'));
+        const itemData = {
+          id: itemRef.id,
+          productId: item.product.id,
+          productName: item.product.name,
+          quantity: item.quantity,
+          priceAtPurchase: item.product.price,
+          size: item.size,
+          color: item.color,
+          imageUrl: item.product.images[0]?.url || '',
+        };
+        setDocumentNonBlocking(itemRef, itemData, { merge: true });
+      });
+
+      toast({
+        title: 'Order Placed!',
+        description: `Thank you, ${values.firstName}! Your order #${orderId.slice(-6).toUpperCase()} is being processed.`,
+      });
+
+      clearCart();
+      router.push('/account');
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Order Failed',
+        description: error.message || 'There was a problem placing your order.',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  if (cartItems.length === 0 && !isSubmitting) {
+    router.push('/cart');
+    return null;
   }
 
   return (
-    <div className="container mx-auto max-w-5xl py-8 md:py-12">
+    <div className="container mx-auto max-w-5xl py-8 md:py-12 px-4">
       <h1 className="mb-8 text-3xl font-bold">Checkout</h1>
       <div className="grid grid-cols-1 gap-8 md:grid-cols-2 md:gap-12">
         <div>
@@ -96,21 +171,21 @@ export default function CheckoutPage() {
                   <div className="space-y-4">
                     <h3 className="font-semibold text-lg">Shipping Address</h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <FormField name="firstName" render={({ field }) => (
+                      <FormField control={form.control} name="firstName" render={({ field }) => (
                           <FormItem><FormLabel>First Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                       )} />
-                      <FormField name="lastName" render={({ field }) => (
+                      <FormField control={form.control} name="lastName" render={({ field }) => (
                           <FormItem><FormLabel>Last Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                       )} />
                     </div>
-                     <FormField name="address" render={({ field }) => (
+                     <FormField control={form.control} name="address" render={({ field }) => (
                           <FormItem><FormLabel>Address</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                       )} />
                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                       <FormField name="city" render={({ field }) => (
+                       <FormField control={form.control} name="city" render={({ field }) => (
                           <FormItem><FormLabel>City</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                         )} />
-                       <FormField name="zip" render={({ field }) => (
+                       <FormField control={form.control} name="zip" render={({ field }) => (
                           <FormItem><FormLabel>ZIP Code</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                         )} />
                     </div>
@@ -118,23 +193,30 @@ export default function CheckoutPage() {
 
                   <div className="space-y-4">
                     <h3 className="font-semibold text-lg">Payment Details</h3>
-                     <FormField name="cardName" render={({ field }) => (
+                     <FormField control={form.control} name="cardName" render={({ field }) => (
                           <FormItem><FormLabel>Name on Card</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                       )} />
-                     <FormField name="cardNumber" render={({ field }) => (
+                     <FormField control={form.control} name="cardNumber" render={({ field }) => (
                           <FormItem><FormLabel>Card Number</FormLabel><FormControl><Input placeholder="•••• •••• •••• ••••" {...field} /></FormControl><FormMessage /></FormItem>
                       )} />
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                       <FormField name="cardExpiry" render={({ field }) => (
+                       <FormField control={form.control} name="cardExpiry" render={({ field }) => (
                           <FormItem><FormLabel>Expiry (MM/YY)</FormLabel><FormControl><Input placeholder="MM/YY" {...field} /></FormControl><FormMessage /></FormItem>
                         )} />
-                       <FormField name="cardCvc" render={({ field }) => (
+                       <FormField control={form.control} name="cardCvc" render={({ field }) => (
                           <FormItem><FormLabel>CVC</FormLabel><FormControl><Input placeholder="•••" {...field} /></FormControl><FormMessage /></FormItem>
                         )} />
                     </div>
                   </div>
-                  <Button type="submit" size="lg" className="w-full">
-                    Place Order
+                  <Button type="submit" size="lg" className="w-full" disabled={isSubmitting}>
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Processing...
+                      </>
+                    ) : (
+                      'Place Order'
+                    )}
                   </Button>
                 </form>
               </Form>
@@ -148,12 +230,12 @@ export default function CheckoutPage() {
             {cartItems.map((item) => (
               <div key={item.id} className="flex items-center gap-4">
                 <Image
-                  src={item.product.images[0].url}
+                  src={item.product.images[0]?.url || ''}
                   alt={item.product.name}
                   width={32}
                   height={40}
                   className="aspect-[4/5] w-[32px] rounded-md object-cover"
-                  data-ai-hint={item.product.images[0].hint}
+                  data-ai-hint={item.product.images[0]?.hint}
                 />
                 <div className="flex-1">
                   <p className="font-medium">{item.product.name}</p>
@@ -163,6 +245,15 @@ export default function CheckoutPage() {
               </div>
             ))}
              <Separator />
+            <div className="flex justify-between">
+              <span>Subtotal</span>
+              <span>R{totalPrice.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Shipping</span>
+              <span>R5.00</span>
+            </div>
+            <Separator />
             <div className="flex justify-between text-lg font-bold">
               <span>Total</span>
               <span>R{(totalPrice + 5).toFixed(2)}</span>

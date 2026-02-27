@@ -21,3 +21,31 @@ export type CartItem = {
   size: string;
   color: string;
 };
+
+export type Order = {
+  id: string;
+  customerId: string;
+  customerName: string;
+  customerEmail: string;
+  orderDate: string;
+  totalAmount: number;
+  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+  shippingAddress: {
+    street: string;
+    city: string;
+    zip: string;
+  };
+  createdAt: any;
+  updatedAt: any;
+};
+
+export type OrderItem = {
+  id: string;
+  productId: string;
+  productName: string;
+  quantity: number;
+  priceAtPurchase: number;
+  size: string;
+  color: string;
+  imageUrl: string;
+};
