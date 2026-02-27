@@ -17,7 +17,7 @@ import {
 import { useRouter } from 'next/navigation';
 import { Logo } from './logo';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from './ui/sheet';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import ClientOnly from './client-only';
 
 const navLinks = [
@@ -29,10 +29,16 @@ const navLinks = [
 
 export default function Header() {
   const [open, setOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const { cartCount } = useCart();
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
   const router = useRouter();
+
+  // Handle hydration mismatch by waiting for mount
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleSignOut = async () => {
     await signOut(auth);
@@ -47,7 +53,7 @@ export default function Header() {
           <div className="md:hidden">
             <Sheet open={open} onOpenChange={setOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" suppressHydrationWarning={true}>
+                <Button variant="ghost" size="icon">
                   <Menu className="h-5 w-5" />
                   <span className="sr-only">Toggle Menu</span>
                 </Button>
@@ -96,19 +102,17 @@ export default function Header() {
 
         {/* Center Section */}
         <div className="flex flex-none items-center justify-center">
-          <ClientOnly>
-            <Link href="/" className="hover:opacity-80 transition-opacity">
-              <p className="font-anton text-lg italic tracking-wider sm:text-xl">
-                THRIFT CLOTHING PLUG
-              </p>
-            </Link>
-          </ClientOnly>
+          <Link href="/" className="hover:opacity-80 transition-opacity">
+            <p className="font-anton text-lg italic tracking-wider sm:text-xl uppercase">
+              THRIFT CLOTHING PLUG
+            </p>
+          </Link>
         </div>
 
         {/* Right Section */}
         <div className="flex flex-1 items-center justify-end gap-1">
           <Link href="/products">
-            <Button variant="ghost" size="icon" suppressHydrationWarning={true}>
+            <Button variant="ghost" size="icon">
               <Search className="h-5 w-5" />
               <span className="sr-only">Search</span>
             </Button>
@@ -119,14 +123,13 @@ export default function Header() {
               <Button
                 variant="ghost"
                 size="icon"
-                suppressHydrationWarning={true}
               >
                 <User className="h-5 w-5" />
                 <span className="sr-only">Account</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              {isUserLoading ? (
+              {!mounted || isUserLoading ? (
                 <DropdownMenuItem>Loading...</DropdownMenuItem>
               ) : user ? (
                 <>
@@ -152,11 +155,10 @@ export default function Header() {
               variant="ghost"
               size="icon"
               className="relative"
-              suppressHydrationWarning={true}
             >
               <ShoppingCart className="h-5 w-5" />
               <span className="sr-only">Cart</span>
-              {cartCount > 0 && (
+              {mounted && cartCount > 0 && (
                 <div className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">
                   {cartCount}
                 </div>
