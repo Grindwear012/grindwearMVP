@@ -142,14 +142,14 @@ export default function CheckoutPage() {
         merchant_key: '05rmzafvu8xfk',
         return_url: `${baseUrl}/checkout/success`,
         cancel_url: `${baseUrl}/checkout/cancel`,
-        notify_url: `${baseUrl}/api/payfast-notify`, // This would need a server route
+        notify_url: `${baseUrl}/api/payfast-notify`,
         name_first: values.firstName,
         name_last: values.lastName,
         email_address: values.email,
-        cell_number: values.cellNumber,
+        cell_number: values.cellNumber || '',
         m_payment_id: orderId,
         amount: (totalPrice + 5).toFixed(2),
-        item_name: `Thrift Plug Order #${orderId.slice(-6).toUpperCase()}`,
+        item_name: `Order #${orderId.slice(-6).toUpperCase()}`,
         item_description: 'Curated Thrift Clothing',
       };
 
@@ -157,31 +157,27 @@ export default function CheckoutPage() {
       payFastData.signature = signature;
 
       // 6. Programmatically create and submit form to PayFast Sandbox
-      const form = document.createElement('form');
-      form.method = 'POST';
-      form.action = 'https://sandbox.payfast.co.za/eng/process';
+      // CRITICAL: Added target="_top" to breakout of any workstation frames
+      const payForm = document.createElement('form');
+      payForm.method = 'POST';
+      payForm.action = 'https://sandbox.payfast.co.za/eng/process';
+      payForm.target = '_top'; 
 
       Object.keys(payFastData).forEach(key => {
         const input = document.createElement('input');
         input.type = 'hidden';
         input.name = key;
         input.value = payFastData[key];
-        form.appendChild(input);
+        payForm.appendChild(input);
       });
 
-      document.body.appendChild(form);
+      document.body.appendChild(payForm);
       
-      toast({
-        title: 'Redirecting to Payment...',
-        description: 'Please wait while we transfer you to PayFast.',
-      });
-
       // Clear cart locally before redirect
       clearCart();
       
-      setTimeout(() => {
-        form.submit();
-      }, 500);
+      // Submit immediately
+      payForm.submit();
 
     } catch (error: any) {
       toast({
@@ -256,7 +252,7 @@ export default function CheckoutPage() {
                       {isSubmitting ? (
                         <>
                           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Processing...
+                          Redirecting to Secure Payment...
                         </>
                       ) : (
                         'Secure Payment via PayFast →'
