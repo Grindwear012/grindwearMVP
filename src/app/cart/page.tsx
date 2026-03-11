@@ -107,9 +107,11 @@ export default function CartPage() {
       const firstName = nameParts[0] || 'Valued';
       const lastName = nameParts.slice(1).join(' ') || 'Customer';
 
-      // 1. Create the Order in Firestore
+      // 1. Create the Order in Firestore (Nested path)
       const orderData = {
         customerId: user.uid,
+        customerName: `${firstName} ${lastName}`,
+        customerEmail: user.email,
         orderDate: new Date().toISOString(),
         products: cartItems.map(item => ({
           productId: item.product.id,
@@ -123,7 +125,6 @@ export default function CartPage() {
         shippingCost: shippingRate,
         totalAmount: finalTotal,
         shippingAddress: deliveryAddress,
-        customerInfo: { firstName, lastName, email: user.email },
         status: 'pending',
         paymentStatus: 'pending',
         createdAt: serverTimestamp(),

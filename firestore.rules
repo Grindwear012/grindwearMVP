@@ -4,16 +4,6 @@ service cloud.firestore {
 
     /**
      * THRIFT PLUG - FIRESTORE SECURITY RULES
-     *
-     * Core Philosophy: 
-     * This ruleset enforces a strict Path-Based Ownership model combined with Database Access Control (DBAC) 
-     * for administrative privileges. User data is isolated within specific customer paths, while 
-     * global roles are managed via a dedicated admin collection.
-     *
-     * Data Structure:
-     * - /customers/{customerId}: The root of user-specific data (Profiles, Addresses, Carts, Orders).
-     * - /products/{productId}: A top-level public catalog.
-     * - /roles_admin/{adminId}: Metadata collection used to identify system administrators.
      */
 
     // --- HELPER FUNCTIONS ---
@@ -30,11 +20,10 @@ service cloud.firestore {
       return isSignedIn() && (
         exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid)) ||
         // Temporary: Allow all signed-in users to act as admins for easier prototyping
-        isSignedIn()
+        true
       );
     }
 
-    // Used for updates/deletes to ensure the resource exists and belongs to the user
     function isExistingOwner(userId) {
       return resource != null && isOwner(userId);
     }
@@ -46,19 +35,19 @@ service cloud.firestore {
     // --- COLLECTION RULES ---
 
     /**
-     * @description Rules for the admin roles collection.
+     * @description Allow collection group queries for orders (needed for admin dashboard).
      */
+    match /{path=**}/orders/{orderId} {
+      allow read: if isAdmin();
+    }
+
     match /roles_admin/{adminId} {
       allow get: if isSignedIn() && (request.auth.uid == adminId || isAdmin());
       allow list: if isAdmin();
-      // Allow users to add themselves as admin for testing purposes
       allow create: if isOwner(adminId);
       allow update, delete: if false;
     }
 
-    /**
-     * @description User profile management.
-     */
     match /customers/{customerId} {
       allow get, list: if isOwner(customerId) || isAdmin();
       allow create: if isOwner(customerId) && request.resource.data.id == customerId;
@@ -66,9 +55,6 @@ service cloud.firestore {
       allow delete: if isExistingOwner(customerId);
     }
 
-    /**
-     * @description Customer-owned subcollections.
-     */
     match /customers/{customerId}/addresses/{addressId} {
       allow get, list: if isOwner(customerId);
       allow create: if isOwner(customerId) && request.resource.data.customerId == customerId;
@@ -103,9 +89,6 @@ service cloud.firestore {
       allow update, delete: if isExistingOwner(customerId);
     }
 
-    /**
-     * @description Order management.
-     */
     match /customers/{customerId}/orders/{orderId} {
       allow get, list: if isOwnerOrAdmin(customerId);
       allow create: if isOwner(customerId) && request.resource.data.customerId == customerId;
@@ -118,9 +101,6 @@ service cloud.firestore {
       allow update, delete: if isOwnerOrAdmin(customerId) && resource != null;
     }
 
-    /**
-     * @description Product catalog rules.
-     */
     match /products/{productId} {
       allow get, list: if true;
       allow create, update, delete: if isAdmin();

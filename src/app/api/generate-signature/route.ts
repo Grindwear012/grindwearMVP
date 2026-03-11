@@ -5,10 +5,10 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     
-    // PayFast Sandbox Credentials
-    const merchant_id = '10041936';
-    const merchant_key = '05rmzafvu8xfk';
-    const passphrase = 'Thriftclothingplug';
+    // PayFast Sandbox Credentials (Defaulting to user-provided values)
+    const merchant_id = process.env.PAYFAST_MERCHANT_ID || '10041936';
+    const merchant_key = process.env.PAYFAST_MERCHANT_KEY || '05rmzafvu8xfk';
+    const passphrase = process.env.PAYFAST_PASSPHRASE || 'Thriftclothingplug';
 
     const {
       amount,
