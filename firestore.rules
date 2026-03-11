@@ -13,9 +13,8 @@ service cloud.firestore {
     }
 
     // Secure isAdmin check: relies exclusively on the roles_admin collection
-    // We use (default) explicitly to ensure the path is bulletproof.
     function isAdmin() {
-      return isSignedIn() && exists(/databases/(default)/documents/roles_admin/$(request.auth.uid));
+      return isSignedIn() && exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid));
     }
 
     function isOwner(userId) {
@@ -26,9 +25,8 @@ service cloud.firestore {
     
     // Allow admins to list all orders across all customer collections for the dashboard
     match /{path=**}/orders/{orderId} {
-      // Admins can see everything; users can only see their own orders if they query specifically for them
+      // Admins can see everything; users can only see their own orders
       allow read: if isAdmin() || (isSignedIn() && request.auth.uid == resource.data.customerId);
-      // Writes are handled in the specific collection path below for better granularity
       allow write: if isAdmin();
     }
 
@@ -42,11 +40,8 @@ service cloud.firestore {
 
     // Customer-specific data (Ownership check)
     match /customers/{customerId} {
-      // Allow user to manage their own profile, or admin to view it
       allow read, write: if isOwner(customerId) || isAdmin();
 
-      // Subcollections (addresses, paymentMethods, carts, orders, productInteractions)
-      // Inherit the same ownership/admin logic
       match /{allSubcollections=**} {
         allow read, write: if isOwner(customerId) || isAdmin();
       }

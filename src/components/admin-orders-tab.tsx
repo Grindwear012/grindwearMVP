@@ -18,7 +18,7 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { useFirestore, useCollection, useMemoFirebase, useUser } from '@/firebase';
 import { collectionGroup, query, orderBy } from 'firebase/firestore';
 import { Loader2, Package, ExternalLink } from 'lucide-react';
 import type { Order } from '@/lib/types';
@@ -27,11 +27,14 @@ import Link from 'next/link';
 
 export default function AdminOrdersTab() {
   const db = useFirestore();
+  const { user } = useUser();
 
   const ordersQuery = useMemoFirebase(() => {
-    if (!db) return null;
+    // Only initiate the query if the user is authenticated.
+    // This prevents "Missing or insufficient permissions" on root list operations.
+    if (!db || !user) return null;
     return query(collectionGroup(db, 'orders'), orderBy('createdAt', 'desc'));
-  }, [db]);
+  }, [db, user]);
 
   const { data: orders, isLoading } = useCollection<Order>(ordersQuery);
 

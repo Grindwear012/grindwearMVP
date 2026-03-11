@@ -76,6 +76,7 @@ export default function AccountPage() {
 
   // Memoize the addresses collection reference
   const addressesRef = useMemoFirebase(() => {
+    // Only return the collection ref if we have a valid UID to prevent root list errors.
     if (!db || !user?.uid) return null;
     return collection(db, 'customers', user.uid, 'addresses');
   }, [db, user?.uid]);
