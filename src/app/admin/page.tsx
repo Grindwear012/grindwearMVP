@@ -12,76 +12,55 @@ import AdminOrdersTab from '@/components/admin-orders-tab';
 import AdminProductsTab from '@/components/admin-products-tab';
 import { useUser, useFirestore } from '@/firebase';
 import { useEffect, useState } from 'react';
-import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { doc, getDoc } from 'firebase/firestore';
 import { Loader2, ShieldCheck } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
 
 export default function AdminPage() {
     const { user, isUserLoading } = useUser();
     const db = useFirestore();
-    const { toast } = useToast();
-    const [isSettingUp, setIsSettingUp] = useState(false);
+    const [isCheckingAuth, setIsCheckingAuth] = useState(true);
     const [isAuthorized, setIsAuthorized] = useState(false);
 
-    const MASTER_ADMIN_EMAIL = "mohalashelldon@gmail.com";
-
     useEffect(() => {
-        async function checkAndSetupAdmin() {
-            if (!user || !db || user.email !== MASTER_ADMIN_EMAIL) {
-                if (user && user.email !== MASTER_ADMIN_EMAIL) {
-                    // Check if they are already in the roles_admin collection
-                    const roleRef = doc(db, 'roles_admin', user.uid);
-                    const roleSnap = await getDoc(roleRef);
-                    setIsAuthorized(roleSnap.exists());
-                }
+        async function verifyAdminStatus() {
+            if (!user || !db) {
+                setIsAuthorized(false);
+                setIsCheckingAuth(false);
                 return;
             }
 
-            // If it's the master email, ensure the record exists
-            setIsSettingUp(true);
             try {
+                // Verify admin status by checking the roles_admin collection
                 const roleRef = doc(db, 'roles_admin', user.uid);
                 const roleSnap = await getDoc(roleRef);
-                
-                if (!roleSnap.exists()) {
-                    await setDoc(roleRef, {
-                        userId: user.uid,
-                        email: user.email,
-                        assignedBy: 'system-init',
-                        createdAt: new Date().toISOString()
-                    });
-                    toast({
-                        title: "Admin Status Verified",
-                        description: "Your account has been registered as a Master Administrator.",
-                    });
-                }
-                setIsAuthorized(true);
+                setIsAuthorized(roleSnap.exists());
             } catch (error) {
-                console.error("Admin setup failed:", error);
+                console.error("Authorization check failed:", error);
+                setIsAuthorized(false);
             } finally {
-                setIsSettingUp(false);
+                setIsCheckingAuth(false);
             }
         }
 
         if (!isUserLoading) {
-            checkAndSetupAdmin();
+            verifyAdminStatus();
         }
-    }, [user, isUserLoading, db, toast]);
+    }, [user, isUserLoading, db]);
 
-    if (isUserLoading || isSettingUp) {
+    if (isUserLoading || isCheckingAuth) {
         return (
             <div className="container mx-auto py-32 flex flex-col items-center justify-center">
                 <Loader2 className="h-10 w-10 animate-spin mb-4 text-primary" />
-                <p className="text-muted-foreground font-medium uppercase tracking-widest text-xs">Verifying Credentials...</p>
+                <p className="text-muted-foreground font-medium uppercase tracking-widest text-xs">Verifying Admin Access...</p>
             </div>
         );
     }
 
-    if (!isAuthorized && user?.email !== MASTER_ADMIN_EMAIL) {
+    if (!isAuthorized) {
         return (
             <div className="container mx-auto py-32 text-center">
                 <h1 className="text-4xl font-black uppercase italic tracking-tighter mb-4">Access Denied</h1>
-                <p className="text-muted-foreground mb-8">You do not have administrative privileges to view this dashboard.</p>
+                <p className="text-muted-foreground mb-8">This account does not have administrative privileges.</p>
                 <button 
                     onClick={() => window.location.href = '/'}
                     className="border-2 border-primary px-8 py-3 font-bold uppercase tracking-widest hover:bg-primary hover:text-primary-foreground transition-colors"

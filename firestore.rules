@@ -3,7 +3,7 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * THRIFT PLUG - FIRESTORE SECURITY RULES
+     * THRIFT PLUG - SECURE FIRESTORE SECURITY RULES
      */
 
     // --- HELPER FUNCTIONS ---
@@ -12,31 +12,28 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    // Explicit check for the master admin email or existence in the admin roles collection
+    // Secure isAdmin check: relies exclusively on the roles_admin collection
     function isAdmin() {
-      return isSignedIn() && (
-        request.auth.token.email == "mohalashelldon@gmail.com" ||
-        exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid))
-      );
+      return isSignedIn() && exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid));
     }
 
     // --- COLLECTION GROUP RULES ---
-    // This is critical for the Admin Dashboard to list orders across all customers
+    
+    // Allow admins to list all orders for the dashboard
     match /{path=**}/orders/{orderId} {
       allow read, write: if isAdmin();
     }
 
     // --- COLLECTION RULES ---
 
-    // Publicly readable products
+    // Publicly readable products, admin-only write
     match /products/{productId} {
       allow read: if true;
       allow write: if isAdmin();
     }
 
-    // Customer-specific data
+    // Customer-specific data (Ownership check)
     match /customers/{customerId} {
-      // Users can manage their own profile and data
       allow read, write: if isSignedIn() && (request.auth.uid == customerId || isAdmin());
 
       match /{allSubcollections=**} {
@@ -46,17 +43,7 @@ service cloud.firestore {
 
     // Admin role definitions
     match /roles_admin/{adminId} {
-      // Allow any signed-in user to check if an admin role exists
-      allow read: if isSignedIn();
-      // Only the system or existing admins can grant admin roles
-      allow write: if isSignedIn() && (
-        request.auth.token.email == "mohalashelldon@gmail.com" ||
-        exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid))
-      );
-    }
-    
-    // Support for root-level orders if used
-    match /orders/{orderId} {
+      // Admins can manage other admin roles
       allow read, write: if isAdmin();
     }
   }
