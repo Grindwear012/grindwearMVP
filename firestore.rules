@@ -13,16 +13,18 @@ service cloud.firestore {
     }
 
     // Secure isAdmin check: relies exclusively on the roles_admin collection
-    // This function checks if a document exists in roles_admin with the user's UID as ID.
+    // We use (default) explicitly to ensure the path is bulletproof.
     function isAdmin() {
-      return isSignedIn() && exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid));
+      return isSignedIn() && exists(/databases/(default)/documents/roles_admin/$(request.auth.uid));
     }
 
     // --- COLLECTION GROUP RULES ---
     
     // Allow admins to list all orders across all customer collections for the dashboard
     match /{path=**}/orders/{orderId} {
-      allow read, write: if isAdmin();
+      // Admins can see everything; users can only see their own orders if they query specifically for them
+      allow read: if isAdmin() || (isSignedIn() && request.auth.uid == resource.data.customerId);
+      allow write: if isAdmin();
     }
 
     // --- COLLECTION RULES ---
@@ -44,7 +46,7 @@ service cloud.firestore {
 
     // Admin role definitions
     match /roles_admin/{adminId} {
-      // Users can read their own admin document to check authorization status
+      // Users can read their own admin document to check authorization status in the UI
       allow get: if isSignedIn() && request.auth.uid == adminId;
       // Only existing admins can list or manage other admin roles
       allow list, write: if isAdmin();
