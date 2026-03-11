@@ -38,7 +38,8 @@ service cloud.firestore {
      * This matches 'orders' collections at any depth in the hierarchy.
      */
     match /{path=**}/orders/{orderId} {
-      allow read: if isAdmin();
+      allow list: if isAdmin();
+      allow get: if isOwnerOrAdmin(resource.data.customerId) || isAdmin();
     }
 
     match /roles_admin/{adminId} {
