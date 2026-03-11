@@ -31,6 +31,7 @@ export default function AdminPage() {
 
             try {
                 // Verify admin status by checking the roles_admin collection
+                // The firestore.rules allow 'get' if the UID matches the document ID
                 const roleRef = doc(db, 'roles_admin', user.uid);
                 const roleSnap = await getDoc(roleRef);
                 setIsAuthorized(roleSnap.exists());
