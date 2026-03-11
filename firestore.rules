@@ -17,11 +17,10 @@ service cloud.firestore {
     }
 
     function isAdmin() {
-      return isSignedIn() && (
-        exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid)) ||
-        // Temporary: Allow all signed-in users to act as admins for easier prototyping
-        true
-      );
+      // Prototyping: Allow all signed-in users to act as admins.
+      // In production, you would check for a specific record in roles_admin:
+      // return isSignedIn() && exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid));
+      return isSignedIn();
     }
 
     function isExistingOwner(userId) {
@@ -36,6 +35,7 @@ service cloud.firestore {
 
     /**
      * @description Allow collection group queries for orders (needed for admin dashboard).
+     * This matches 'orders' collections at any depth in the hierarchy.
      */
     match /{path=**}/orders/{orderId} {
       allow read: if isAdmin();
