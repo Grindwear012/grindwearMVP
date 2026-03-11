@@ -13,9 +13,8 @@ service cloud.firestore {
     }
 
     function isAdmin() {
-      // Prototyping: Allow all signed-in users to act as admins.
-      // This resolves permission issues during development.
-      return isSignedIn();
+      // Check for existence of a document in roles_admin with ID = user UID
+      return isSignedIn() && exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid));
     }
 
     // --- COLLECTION GROUP RULES ---
@@ -23,7 +22,6 @@ service cloud.firestore {
     /**
      * @description Allow collection group queries for orders.
      * This is critical for the Admin Dashboard to list orders from all customers.
-     * Note: A collection group index on 'orders' (field: 'createdAt') is required for sorting.
      */
     match /{path=**}/orders/{orderId} {
       allow read, write: if isAdmin();
@@ -50,8 +48,9 @@ service cloud.firestore {
 
     // Admin role definitions
     match /roles_admin/{adminId} {
+      // Admins can read the list of admins; no one can write via the client SDK (managed via Console/Admin SDK).
       allow read: if isSignedIn();
-      allow write: if false; // Managed via Admin SDK or Console
+      allow write: if false; 
     }
   }
 }

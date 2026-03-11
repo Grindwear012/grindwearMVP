@@ -472,6 +472,31 @@
         "interactionType",
         "timestamp"
       ]
+    },
+    "RoleAdmin": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "RoleAdmin",
+      "type": "object",
+      "description": "Grants administrative privileges based on document existence. The document ID must match the user's Firebase Authentication UID.",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "The UID of the administrator."
+        },
+        "assignedBy": {
+          "type": "string",
+          "description": "The UID of the person who assigned the role."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when the role was granted."
+        }
+      },
+      "required": [
+        "userId",
+        "createdAt"
+      ]
     }
   },
   "auth": {
@@ -669,7 +694,7 @@
           "schema": {
             "$ref": "#/backend/entities/RoleAdmin"
           },
-          "description": "Contains documents where the ID is the `uid` of an administrator. The existence of a document grants admin privileges. Used for DBAC (Database Access Control) to manage products and customer orders. Note: 'RoleAdmin' is a conceptual entity for defining roles, which is not explicitly provided in the initial schema but is crucial for robust authentication.",
+          "description": "Contains documents where the ID is the `uid` of an administrator. The existence of a document grants admin privileges.",
           "params": [
             {
               "name": "adminId",
@@ -679,6 +704,6 @@
         }
       }
     ],
-    "reasoning": "The Firestore structure for 'Thrift Plug' is designed to prioritize secure, scalable, and debuggable authorization using the outlined core principles and mandates. Central to this design is the strict adherence to Authorization Independence and the support for Query-able Access Patterns (QAPs).\n\n1.  Authorization Independence:\n    *   **Path-Based Ownership Denormalization:** For all user-specific data (Customer, Address, PaymentMethod, Cart, CartItem, Order, OrderItem, ProductInteraction), ownership is explicitly denormalized into the document path. For instance, customer addresses are stored at `/customers/{customerId}/addresses/{addressId}`. This ensures that any security rule can verify `request.auth.uid == customerId` directly from the path without requiring any `get()` calls to parent documents. This prevents cascading authorization dependencies, making transactions and batch writes atomic and rules significantly simpler and more performant. It also inherently ties data to its owner, simplifying data isolation.\n    *   **Existence-Based Global Roles:** For administrative access (e.g., managing products, viewing all orders), a dedicated top-level collection `/roles_admin/{adminId}` is used. An administrator's `uid` will be the document ID in this collection. Security rules can check for the existence of `get(/databases/$(database)/documents/roles_admin/$(request.auth.uid)).exists()` to grant elevated privileges. This method is `Authorization Independent` as it does not rely on complex data lookups within the same document or `get()` calls to other non-role-related documents.\n\n2.  QAPs (Rules are not Filters):\n    *   **Public Collections:** The `/products` collection is designed for universal readability. Security rules will grant `read` access to all authenticated users (and potentially unauthenticated users if desired), which naturally supports efficient `list` operations without requiring client-side filtering or server-side rule-based filtering (as all data is meant to be visible).\n    *   **User-Scoped Collections:** For all subcollections under `/customers/{customerId}/...`, `list` operations are inherently secure. A user can only 'list' documents within their specific `/customers/$(request.auth.uid)/...` path. The security rules will enforce `allow list: if request.auth.uid == customerId;`. This automatically scopes the `list` operation to the authenticated user's data, eliminating the need for `where` clauses to enforce security and fully supporting QAPs.\n\n3.  Structural Segregation and Consistency:\n    *   **Private vs. Public Data:** Data is segregated into distinct collections based on its security posture. `products` is public, while `customers/{customerId}/...` subcollections are private to the user.\n    *   **Hierarchical Paths:** User-owned data follows a clear hierarchical path (`/customers/{customerId}/addresses/{addressId}`), making the ownership explicit and simplifying rule writing.\n    *   **Explicit State:** The `Order` entity's `status` field (e.g., 'pending', 'shipped') ensures clear state modeling.\n\nThis architecture minimizes rule complexity, prevents security vulnerabilities arising from `get()` dependencies, and ensures that the application can efficiently query and manage data for individual users and administrators."
+    "reasoning": "The Firestore structure for 'Thrift Plug' uses Path-Based Ownership Denormalization to ensure Authorization Independence. Admin access is managed via a dedicated '/roles_admin' collection."
   }
 }
