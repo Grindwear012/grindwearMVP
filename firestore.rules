@@ -12,15 +12,16 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    // Explicit check for the master admin email or existence in the admin roles collection
     function isAdmin() {
       return isSignedIn() && (
-        exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid)) ||
-        request.auth.token.email == "mohalashelldon@gmail.com"
+        request.auth.token.email == "mohalashelldon@gmail.com" ||
+        exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid))
       );
     }
 
     // --- COLLECTION GROUP RULES ---
-
+    // This is critical for the Admin Dashboard to list orders across all customers
     match /{path=**}/orders/{orderId} {
       allow read, write: if isAdmin();
     }
@@ -35,6 +36,7 @@ service cloud.firestore {
 
     // Customer-specific data
     match /customers/{customerId} {
+      // Users can manage their own profile and data
       allow read, write: if isSignedIn() && (request.auth.uid == customerId || isAdmin());
 
       match /{allSubcollections=**} {
@@ -44,12 +46,18 @@ service cloud.firestore {
 
     // Admin role definitions
     match /roles_admin/{adminId} {
-      // Allow initial registration for the master email
+      // Allow any signed-in user to check if an admin role exists
       allow read: if isSignedIn();
+      // Only the system or existing admins can grant admin roles
       allow write: if isSignedIn() && (
         request.auth.token.email == "mohalashelldon@gmail.com" ||
         exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid))
       );
+    }
+    
+    // Support for root-level orders if used
+    match /orders/{orderId} {
+      allow read, write: if isAdmin();
     }
   }
 }
