@@ -14,7 +14,11 @@ service cloud.firestore {
 
     function isAdmin() {
       // Check for existence of a document in roles_admin with ID = user UID
-      return isSignedIn() && exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid));
+      // OR allow the developer email to bypass for initial setup
+      return isSignedIn() && (
+        exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid)) ||
+        request.auth.token.email == "mohalashelldon@gmail.com"
+      );
     }
 
     // --- COLLECTION GROUP RULES ---
@@ -22,9 +26,11 @@ service cloud.firestore {
     /**
      * @description Allow collection group queries for orders.
      * This is critical for the Admin Dashboard to list orders from all customers.
+     * Collection group rules must use this specific recursive path pattern.
      */
     match /{path=**}/orders/{orderId} {
-      allow read, write: if isAdmin();
+      allow read: if isAdmin();
+      allow write: if isAdmin();
     }
 
     // --- COLLECTION RULES ---
@@ -40,7 +46,7 @@ service cloud.firestore {
       // Users can manage their own profile; admins can see everything.
       allow read, write: if isSignedIn() && (request.auth.uid == customerId || isAdmin());
 
-      // All subcollections (addresses, carts, interactions, etc.)
+      // All subcollections (addresses, carts, interactions, orders, etc.)
       match /{allSubcollections=**} {
         allow read, write: if isSignedIn() && (request.auth.uid == customerId || isAdmin());
       }
@@ -48,8 +54,10 @@ service cloud.firestore {
 
     // Admin role definitions
     match /roles_admin/{adminId} {
-      // Admins can read the list of admins; no one can write via the client SDK (managed via Console/Admin SDK).
+      // Admins can read the list of admins
       allow read: if isSignedIn();
+      // Writing to roles_admin should be restricted to prevent self-elevation in production
+      // but we allow read/list for auth checks.
       allow write: if false; 
     }
   }
