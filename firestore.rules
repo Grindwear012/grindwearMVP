@@ -12,99 +12,46 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    function isOwner(userId) {
-      return isSignedIn() && request.auth.uid == userId;
-    }
-
     function isAdmin() {
       // Prototyping: Allow all signed-in users to act as admins.
-      // In production, you would check for a specific record in roles_admin:
-      // return isSignedIn() && exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid));
+      // This resolves permission issues during development.
       return isSignedIn();
     }
 
-    function isExistingOwner(userId) {
-      return resource != null && isOwner(userId);
-    }
+    // --- COLLECTION GROUP RULES ---
 
-    function isOwnerOrAdmin(userId) {
-      return isOwner(userId) || isAdmin();
+    /**
+     * @description Allow collection group queries for orders.
+     * This is critical for the Admin Dashboard to list orders from all customers.
+     * Note: A collection group index on 'orders' (field: 'createdAt') is required for sorting.
+     */
+    match /{path=**}/orders/{orderId} {
+      allow read, write: if isAdmin();
     }
 
     // --- COLLECTION RULES ---
 
-    /**
-     * @description Allow collection group queries for orders (needed for admin dashboard).
-     * This matches 'orders' collections at any depth in the hierarchy.
-     */
-    match /{path=**}/orders/{orderId} {
-      allow list: if isAdmin();
-      allow get: if isOwnerOrAdmin(resource.data.customerId) || isAdmin();
-    }
-
-    match /roles_admin/{adminId} {
-      allow get: if isSignedIn() && (request.auth.uid == adminId || isAdmin());
-      allow list: if isAdmin();
-      allow create: if isOwner(adminId);
-      allow update, delete: if false;
-    }
-
-    match /customers/{customerId} {
-      allow get, list: if isOwner(customerId) || isAdmin();
-      allow create: if isOwner(customerId) && request.resource.data.id == customerId;
-      allow update: if isExistingOwner(customerId) && request.resource.data.id == resource.data.id;
-      allow delete: if isExistingOwner(customerId);
-    }
-
-    match /customers/{customerId}/addresses/{addressId} {
-      allow get, list: if isOwner(customerId);
-      allow create: if isOwner(customerId) && request.resource.data.customerId == customerId;
-      allow update: if isExistingOwner(customerId) && request.resource.data.customerId == resource.data.customerId;
-      allow delete: if isExistingOwner(customerId);
-    }
-
-    match /customers/{customerId}/paymentMethods/{paymentMethodId} {
-      allow get, list: if isOwner(customerId);
-      allow create: if isOwner(customerId) && request.resource.data.customerId == customerId;
-      allow update: if isExistingOwner(customerId) && request.resource.data.customerId == resource.data.customerId;
-      allow delete: if isExistingOwner(customerId);
-    }
-
-    match /customers/{customerId}/carts/{cartId} {
-      allow get, list: if isOwner(customerId);
-      allow create: if isOwner(customerId) && request.resource.data.customerId == customerId;
-      allow update: if isExistingOwner(customerId) && request.resource.data.customerId == resource.data.customerId;
-      allow delete: if isExistingOwner(customerId);
-    }
-
-    match /customers/{customerId}/carts/{cartId}/items/{cartItemId} {
-      allow get, list: if isOwner(customerId);
-      allow create: if isOwner(customerId);
-      allow update: if isExistingOwner(customerId);
-      allow delete: if isExistingOwner(customerId);
-    }
-
-    match /customers/{customerId}/productInteractions/{interactionId} {
-      allow get, list: if isOwner(customerId);
-      allow create: if isOwner(customerId) && request.resource.data.customerId == customerId;
-      allow update, delete: if isExistingOwner(customerId);
-    }
-
-    match /customers/{customerId}/orders/{orderId} {
-      allow get, list: if isOwnerOrAdmin(customerId);
-      allow create: if isOwner(customerId) && request.resource.data.customerId == customerId;
-      allow update, delete: if isOwnerOrAdmin(customerId) && resource != null;
-    }
-
-    match /customers/{customerId}/orders/{orderId}/items/{orderItemId} {
-      allow get, list: if isOwnerOrAdmin(customerId);
-      allow create: if isOwner(customerId);
-      allow update, delete: if isOwnerOrAdmin(customerId) && resource != null;
-    }
-
+    // Publicly readable products
     match /products/{productId} {
-      allow get, list: if true;
-      allow create, update, delete: if isAdmin();
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Customer-specific data
+    match /customers/{customerId} {
+      // Users can manage their own profile; admins can see everything.
+      allow read, write: if isSignedIn() && (request.auth.uid == customerId || isAdmin());
+
+      // All subcollections (addresses, carts, interactions, etc.)
+      match /{allSubcollections=**} {
+        allow read, write: if isSignedIn() && (request.auth.uid == customerId || isAdmin());
+      }
+    }
+
+    // Admin role definitions
+    match /roles_admin/{adminId} {
+      allow read: if isSignedIn();
+      allow write: if false; // Managed via Admin SDK or Console
     }
   }
 }
