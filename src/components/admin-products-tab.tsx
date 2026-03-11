@@ -103,7 +103,10 @@ export default function AdminProductsTab() {
 
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
-      const storageRef = ref(storage, `products/${form.getValues('name') || 'unnamed'}/${Date.now()}-${file.name}`);
+      // Create a unique path for the image
+      const productName = form.getValues('name') || 'unnamed';
+      const fileName = `${Date.now()}-${file.name}`;
+      const storageRef = ref(storage, `products/${productName}/${fileName}`);
       const uploadTask = uploadBytesResumable(storageRef, file);
 
       await new Promise<void>((resolve, reject) => {
@@ -123,7 +126,7 @@ export default function AdminProductsTab() {
           },
           async () => {
             const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-            newImages.push({ url: downloadURL, hint: form.getValues('name').toLowerCase() });
+            newImages.push({ url: downloadURL, hint: productName.toLowerCase() });
             resolve();
           }
         );
