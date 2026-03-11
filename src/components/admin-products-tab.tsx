@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
+import Image from 'next/image';
 import {
   Card,
   CardContent,
@@ -39,11 +40,13 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { Plus, Pencil, Trash2, Loader2 } from 'lucide-react';
-import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { Plus, Pencil, Trash2, Loader2, Upload, X } from 'lucide-react';
+import { useFirestore, useCollection, useMemoFirebase, useStorage } from '@/firebase';
 import { collection, serverTimestamp, doc } from 'firebase/firestore';
+import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { addDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import type { Product } from '@/lib/types';
+import { Progress } from '@/components/ui/progress';
 
 const productSchema = z.object({
   name: z.string().min(1, 'Product name is required'),
@@ -54,13 +57,16 @@ const productSchema = z.object({
   brand: z.string().min(1, 'Brand is required'),
   sizes: z.string().min(1, 'Please provide comma-separated sizes'),
   colors: z.string().min(1, 'Please provide comma-separated colors'),
-  images: z.string().min(1, 'Please provide comma-separated image URLs'),
 });
 
 export default function AdminProductsTab() {
   const { toast } = useToast();
   const db = useFirestore();
+  const storage = useStorage();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadedImages, setUploadedImages] = useState<{ url: string; hint: string }[]>([]);
 
   const productsRef = useMemoFirebase(() => collection(db, 'products'), [db]);
   const { data: products, isLoading } = useCollection<Product>(productsRef);
@@ -76,19 +82,77 @@ export default function AdminProductsTab() {
       brand: '',
       sizes: '',
       colors: '',
-      images: '',
     },
   });
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    if (uploadedImages.length + files.length > 6) {
+      toast({
+        variant: 'destructive',
+        title: 'Limit Exceeded',
+        description: 'You can only upload up to 6 images per product.',
+      });
+      return;
+    }
+
+    setIsUploading(true);
+    const newImages = [...uploadedImages];
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const storageRef = ref(storage, `products/${form.getValues('name') || 'unnamed'}/${Date.now()}-${file.name}`);
+      const uploadTask = uploadBytesResumable(storageRef, file);
+
+      await new Promise<void>((resolve, reject) => {
+        uploadTask.on(
+          'state_changed',
+          (snapshot) => {
+            const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+            setUploadProgress(progress);
+          },
+          (error) => {
+            toast({
+              variant: 'destructive',
+              title: 'Upload Failed',
+              description: error.message,
+            });
+            reject(error);
+          },
+          async () => {
+            const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+            newImages.push({ url: downloadURL, hint: form.getValues('name').toLowerCase() });
+            resolve();
+          }
+        );
+      });
+    }
+
+    setUploadedImages(newImages);
+    setIsUploading(false);
+    setUploadProgress(0);
+  };
+
+  const removeImage = (index: number) => {
+    setUploadedImages(prev => prev.filter((_, i) => i !== index));
+  };
 
   function onSubmit(values: z.infer<typeof productSchema>) {
     if (!db) return;
 
+    if (uploadedImages.length === 0) {
+      toast({
+        variant: 'destructive',
+        title: 'No Images',
+        description: 'Please upload at least one image for the product.',
+      });
+      return;
+    }
+
     const sizesArray = values.sizes.split(',').map((s) => s.trim()).filter(Boolean);
     const colorsArray = values.colors.split(',').map((c) => c.trim()).filter(Boolean);
-    const imagesArray = values.images.split(',').map((url) => ({
-      url: url.trim(),
-      hint: values.name.toLowerCase(),
-    })).filter((img) => img.url);
 
     const productData = {
       name: values.name,
@@ -99,7 +163,7 @@ export default function AdminProductsTab() {
       category: values.category,
       sizes: sizesArray,
       colors: colorsArray,
-      images: imagesArray,
+      images: uploadedImages,
       rating: 5.0,
       reviews: 0,
       createdAt: serverTimestamp(),
@@ -114,6 +178,7 @@ export default function AdminProductsTab() {
     });
 
     form.reset();
+    setUploadedImages([]);
     setIsAddDialogOpen(false);
   }
 
@@ -166,6 +231,45 @@ export default function AdminProductsTab() {
                     </FormItem>
                   )}
                 />
+                
+                <div className="space-y-2">
+                  <FormLabel>Product Images (Max 6)</FormLabel>
+                  <div className="grid grid-cols-3 gap-4 mb-4">
+                    {uploadedImages.map((img, index) => (
+                      <div key={index} className="relative aspect-square rounded-lg overflow-hidden border">
+                        <Image src={img.url} alt="Preview" fill className="object-cover" />
+                        <button
+                          type="button"
+                          onClick={() => removeImage(index)}
+                          className="absolute top-1 right-1 bg-destructive text-destructive-foreground p-1 rounded-full shadow-lg"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </div>
+                    ))}
+                    {uploadedImages.length < 6 && (
+                      <label className="aspect-square flex flex-col items-center justify-center border-2 border-dashed rounded-lg cursor-pointer hover:bg-muted transition-colors">
+                        <Upload className="h-6 w-6 text-muted-foreground mb-2" />
+                        <span className="text-xs text-muted-foreground">Upload Image</span>
+                        <input
+                          type="file"
+                          multiple
+                          accept="image/*"
+                          className="hidden"
+                          onChange={handleImageUpload}
+                          disabled={isUploading}
+                        />
+                      </label>
+                    )}
+                  </div>
+                  {isUploading && (
+                    <div className="space-y-2">
+                      <Progress value={uploadProgress} className="h-2" />
+                      <p className="text-xs text-center text-muted-foreground">Uploading images...</p>
+                    </div>
+                  )}
+                </div>
+
                 <FormField
                   control={form.control}
                   name="brand"
@@ -261,20 +365,9 @@ export default function AdminProductsTab() {
                     )}
                   />
                 </div>
-                <FormField
-                  control={form.control}
-                  name="images"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Image URLs (comma-separated)</FormLabel>
-                      <FormControl>
-                        <Textarea placeholder="https://example.com/img1.jpg, ..." {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <Button type="submit" className="w-full">Save Product</Button>
+                <Button type="submit" className="w-full" disabled={isUploading}>
+                  {isUploading ? 'Waiting for uploads...' : 'Save Product'}
+                </Button>
               </form>
             </Form>
           </DialogContent>
