@@ -21,7 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useUser, useFirestore } from '@/firebase';
 import { collection, doc, serverTimestamp, addDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
@@ -104,14 +104,15 @@ export default function CartPage() {
     try {
       const finalTotal = totalPrice + (shippingRate || 0);
       const nameParts = (user.displayName || 'Customer').split(' ');
-      const firstName = nameParts[0] || 'Valued';
-      const lastName = nameParts.slice(1).join(' ') || 'Customer';
+      const firstName = nameParts[0] || 'Customer';
+      const lastName = nameParts.slice(1).join(' ') || 'User';
 
-      // 1. Create the Order in Firestore (Nested path)
+      // 1. Create the Order in Firestore
       const orderData = {
         customerId: user.uid,
         customerName: `${firstName} ${lastName}`,
         customerEmail: user.email,
+        customerInfo: { firstName, lastName, email: user.email },
         orderDate: new Date().toISOString(),
         products: cartItems.map(item => ({
           productId: item.product.id,
@@ -125,7 +126,7 @@ export default function CartPage() {
         shippingCost: shippingRate,
         totalAmount: finalTotal,
         shippingAddress: deliveryAddress,
-        status: 'pending',
+        fulfillmentStatus: 'pending',
         paymentStatus: 'pending',
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
@@ -137,13 +138,13 @@ export default function CartPage() {
       // 2. Generate Signature via API
       const signaturePayload = {
         amount: finalTotal,
-        item_name: `Order #${orderId.slice(-6).toUpperCase()}`,
-        item_description: `${cartCount} items from Thrift Plug`,
+        item_name: `${cartCount} items from Thrift Plug`,
+        item_description: `Order #${orderId.slice(-6).toUpperCase()}`,
         name_first: firstName,
         name_last: lastName,
         email_address: user.email || '',
         m_payment_id: orderId,
-        return_url: `${window.location.origin}/checkout/success`,
+        return_url: `${window.location.origin}/checkout/success?order_id=${orderId}`,
         cancel_url: `${window.location.origin}/checkout/cancel`,
         notify_url: `${window.location.origin}/api/payment-notify`,
         custom_str1: user.uid,
@@ -168,13 +169,12 @@ export default function CartPage() {
     }
   };
 
-  // Trigger PayFast redirect when payment data is ready
   useEffect(() => {
     if (paymentData) {
       const form = document.createElement('form');
       form.method = 'POST';
       form.action = 'https://sandbox.payfast.co.za/eng/process';
-      form.target = '_top'; // Break out of workstation frames
+      form.target = '_top'; 
 
       Object.keys(paymentData).forEach(key => {
         const input = document.createElement('input');
@@ -185,7 +185,7 @@ export default function CartPage() {
       });
 
       document.body.appendChild(form);
-      clearCart(); // Clear local state before leaving
+      clearCart(); 
       form.submit();
     }
   }, [paymentData, clearCart]);

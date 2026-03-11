@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminDb } from '@/lib/firebase-admin';
-import crypto from 'crypto';
 
 /**
  * Instant Transaction Notification (ITN) Handler
@@ -17,21 +16,19 @@ export async function POST(req: NextRequest) {
 
     console.log('PayFast ITN received:', data);
 
-    const { m_payment_id, payment_status, signature, custom_str1 } = data;
+    const { m_payment_id, payment_status, custom_str1 } = data;
 
-    // 1. Verify Signature (Security Check)
-    // In a real app, you would reconstruct the signature with your passphrase 
-    // and compare it to the signature parameter received from PayFast.
+    // Verify Signature logic would go here in production
     
-    // 2. Process Order if status is COMPLETE
+    // Process Order if status is COMPLETE
     if (payment_status === 'COMPLETE' && m_payment_id && custom_str1) {
       const userId = custom_str1;
       
       // Update the order in Firestore using Admin SDK
+      // Path: /customers/{userId}/orders/{m_payment_id}
       const orderRef = adminDb.doc(`customers/${userId}/orders/${m_payment_id}`);
       
       await orderRef.update({
-        status: 'processing',
         paymentStatus: 'paid',
         updatedAt: new Date().toISOString()
       });
@@ -39,7 +36,6 @@ export async function POST(req: NextRequest) {
       console.log(`Order ${m_payment_id} updated to PAID for user ${userId}`);
     }
 
-    // PayFast expects a 200 OK response
     return new NextResponse('OK', { status: 200 });
 
   } catch (error) {

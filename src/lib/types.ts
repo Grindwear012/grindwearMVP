@@ -27,14 +27,33 @@ export type Order = {
   customerId: string;
   customerName: string;
   customerEmail: string;
+  customerInfo: {
+    firstName: string;
+    lastName: string;
+    email: string;
+  };
   orderDate: string;
+  subtotal: number;
+  shippingCost: number;
   totalAmount: number;
-  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+  paymentStatus: 'pending' | 'paid' | 'failed';
+  fulfillmentStatus: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
   shippingAddress: {
     street: string;
+    suburb?: string;
     city: string;
-    zip: string;
+    province?: string;
+    postalCode: string;
   };
+  products: {
+    productId: string;
+    name: string;
+    quantity: number;
+    price: number;
+    size: string;
+    color: string;
+  }[];
+  trackingNumber?: string;
   createdAt: any;
   updatedAt: any;
 };

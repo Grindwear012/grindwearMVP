@@ -20,17 +20,17 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collectionGroup, query, orderBy } from 'firebase/firestore';
-import { Loader2, Package } from 'lucide-react';
+import { Loader2, Package, ExternalLink } from 'lucide-react';
 import type { Order } from '@/lib/types';
 import { format } from 'date-fns';
+import Link from 'next/link';
 
 export default function AdminOrdersTab() {
   const db = useFirestore();
 
-  // Query all orders across all customers using collectionGroup
   const ordersQuery = useMemoFirebase(() => {
     if (!db) return null;
-    return query(collectionGroup(db, 'orders'));
+    return query(collectionGroup(db, 'orders'), orderBy('createdAt', 'desc'));
   }, [db]);
 
   const { data: orders, isLoading } = useCollection<Order>(ordersQuery);
@@ -68,7 +68,6 @@ export default function AdminOrdersTab() {
       <CardContent>
         {orders && orders.length > 0 ? (
           <>
-            {/* Desktop View */}
             <div className="hidden md:block">
               <Table>
                 <TableHeader>
@@ -77,7 +76,8 @@ export default function AdminOrdersTab() {
                     <TableHead>Date</TableHead>
                     <TableHead>Customer</TableHead>
                     <TableHead>Total</TableHead>
-                    <TableHead>Status</TableHead>
+                    <TableHead>Fulfillment</TableHead>
+                    <TableHead>Payment</TableHead>
                     <TableHead></TableHead>
                   </TableRow>
                 </TableHeader>
@@ -88,7 +88,7 @@ export default function AdminOrdersTab() {
                         #{order.id.slice(-6)}
                       </TableCell>
                       <TableCell>
-                        {order.orderDate ? format(new Date(order.orderDate), 'MMM dd, yyyy') : 'N/A'}
+                        {order.orderDate ? format(new Date(order.orderDate), 'MMM dd, yyyy') : 'Recently'}
                       </TableCell>
                       <TableCell>
                         <div className="flex flex-col">
@@ -98,19 +98,28 @@ export default function AdminOrdersTab() {
                       </TableCell>
                       <TableCell>R{order.totalAmount.toFixed(2)}</TableCell>
                       <TableCell>
-                        <Badge variant={getStatusVariant(order.status) as any} className="capitalize">
-                          {order.status}
+                        <Badge variant={getStatusVariant(order.fulfillmentStatus) as any} className="capitalize">
+                          {order.fulfillmentStatus}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={order.paymentStatus === 'paid' ? 'default' : 'outline'} className="capitalize">
+                          {order.paymentStatus}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button variant="outline" size="sm">Manage</Button>
+                        <Button asChild variant="ghost" size="sm">
+                          <Link href={`/admin/orders/${order.customerId}/${order.id}`}>
+                            <ExternalLink className="h-4 w-4 mr-2" />
+                            Details
+                          </Link>
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
               </Table>
             </div>
-            {/* Mobile View */}
             <div className="grid grid-cols-1 gap-4 md:hidden">
               {orders.map((order) => (
                 <Card key={order.id}>
@@ -122,19 +131,21 @@ export default function AdminOrdersTab() {
                         </CardTitle>
                         <CardDescription>{order.customerName}</CardDescription>
                       </div>
-                      <Badge variant={getStatusVariant(order.status) as any} className="capitalize">
-                        {order.status}
+                      <Badge variant={getStatusVariant(order.fulfillmentStatus) as any} className="capitalize">
+                        {order.fulfillmentStatus}
                       </Badge>
                     </div>
-                    <CardDescription>
-                      {order.orderDate ? format(new Date(order.orderDate), 'MMM dd, yyyy') : 'N/A'}
-                    </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <p className="font-semibold text-lg">R{order.totalAmount.toFixed(2)}</p>
+                    <div className="flex justify-between items-center">
+                      <p className="font-semibold">R{order.totalAmount.toFixed(2)}</p>
+                      <Badge variant={order.paymentStatus === 'paid' ? 'default' : 'outline'}>{order.paymentStatus}</Badge>
+                    </div>
                   </CardContent>
                   <CardFooter>
-                    <Button variant="outline" size="sm" className="w-full">Manage</Button>
+                    <Button asChild variant="outline" size="sm" className="w-full">
+                      <Link href={`/admin/orders/${order.customerId}/${order.id}`}>Manage Order</Link>
+                    </Button>
                   </CardFooter>
                 </Card>
               ))}
