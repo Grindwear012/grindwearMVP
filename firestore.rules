@@ -25,7 +25,6 @@ service cloud.firestore {
     
     // Allow admins to list all orders across all customer collections for the dashboard
     match /{path=**}/orders/{orderId} {
-      // Admins can see everything; users can only see their own orders
       allow read: if isAdmin() || (isSignedIn() && request.auth.uid == resource.data.customerId);
       allow write: if isAdmin();
     }
