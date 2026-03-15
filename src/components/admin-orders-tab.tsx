@@ -19,24 +19,45 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useFirestore, useCollection, useMemoFirebase, useUser } from '@/firebase';
-import { collectionGroup, query, orderBy } from 'firebase/firestore';
+import { collectionGroup, query, orderBy, doc, getDoc } from 'firebase/firestore';
 import { Loader2, Package, ExternalLink } from 'lucide-react';
 import type { Order } from '@/lib/types';
 import { format } from 'date-fns';
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 
 export default function AdminOrdersTab() {
   const db = useFirestore();
   const { user } = useUser();
+  const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
 
-  const ordersQuery = useMemoFirebase(() => {
-    // Only initiate the query if the user is authenticated.
-    // This prevents "Missing or insufficient permissions" on root list operations.
-    if (!db || !user) return null;
-    return query(collectionGroup(db, 'orders'), orderBy('createdAt', 'desc'));
+  // Check admin authorization locally before firing the collectionGroup query
+  useEffect(() => {
+    async function checkAuth() {
+      if (!db || !user) {
+        setIsAuthorized(false);
+        return;
+      }
+      try {
+        const adminRef = doc(db, 'roles_admin', user.uid);
+        const snap = await getDoc(adminRef);
+        setIsAuthorized(snap.exists());
+      } catch (err) {
+        console.error("Auth check failed", err);
+        setIsAuthorized(false);
+      }
+    }
+    checkAuth();
   }, [db, user]);
 
-  const { data: orders, isLoading } = useCollection<Order>(ordersQuery);
+  const ordersQuery = useMemoFirebase(() => {
+    // ONLY initiate the query if the user is verified as an admin.
+    // This prevents "Missing or insufficient permissions" errors on component mount.
+    if (!db || !user || isAuthorized !== true) return null;
+    return query(collectionGroup(db, 'orders'), orderBy('createdAt', 'desc'));
+  }, [db, user, isAuthorized]);
+
+  const { data: orders, isLoading: isOrdersLoading } = useCollection<Order>(ordersQuery);
 
   const getStatusVariant = (status: string) => {
     switch (status) {
@@ -54,11 +75,25 @@ export default function AdminOrdersTab() {
     }
   };
 
-  if (isLoading) {
+  if (isAuthorized === null || isOrdersLoading) {
     return (
-      <div className="flex items-center justify-center py-20">
+      <div className="flex flex-col items-center justify-center py-20 gap-4">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+          {isAuthorized === null ? 'Verifying Admin Access...' : 'Loading Orders...'}
+        </p>
       </div>
+    );
+  }
+
+  if (isAuthorized === false) {
+    return (
+      <Card className="border-destructive">
+        <CardHeader>
+          <CardTitle className="text-destructive">Unauthorized</CardTitle>
+          <CardDescription>You do not have permission to view this data.</CardDescription>
+        </CardHeader>
+      </Card>
     );
   }
 
