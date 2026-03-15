@@ -1,66 +1,31 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    /**
-     * THRIFT PLUG - SECURE FIRESTORE SECURITY RULES
-     */
-
-    // --- HELPER FUNCTIONS ---
-
     function isSignedIn() {
       return request.auth != null;
     }
-
-    // Secure isAdmin check: relies exclusively on the roles_admin collection.
-    // Using $(database) instead of (default) for better compatibility across environments.
     function isAdmin() {
-      return isSignedIn() && exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid));
+      return isSignedIn() && request.auth.token.admin == true;
     }
-
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
     }
-
-    // --- COLLECTION GROUP RULES ---
-
-    // Allow admins to list all orders across all customer collections for the dashboard.
-    // Separating rules into get and list for better clarity for the Firestore engine.
     match /{path=**}/orders/{orderId} {
-      // 1. Admin can list/get all orders
-      allow read: if isAdmin();
-      
-      // 2. Users can read their own orders (only works for queries filtered by customerId)
-      allow read: if isSignedIn() && (
-        (resource != null && request.auth.uid == resource.data.customerId) ||
-        (resource == null) // Allow query initiation if the engine can't check data yet (must be filtered)
-      );
-      
+      allow read: if isAdmin() || (isSignedIn() && resource != null && request.auth.uid == resource.data.customerId);
       allow write: if isAdmin();
     }
-
-    // --- COLLECTION RULES ---
-
-    // Publicly readable products, admin-only write
     match /products/{productId} {
       allow read: if true;
       allow write: if isAdmin();
     }
-
-    // Customer-specific data (Ownership check)
     match /customers/{customerId} {
       allow read, write: if isOwner(customerId) || isAdmin();
-
       match /{allSubcollections=**} {
         allow read, write: if isOwner(customerId) || isAdmin();
       }
     }
-
-    // Admin role definitions
     match /roles_admin/{adminId} {
-      // Users can read their own admin document to check authorization status in the UI.
       allow get: if isSignedIn() && request.auth.uid == adminId;
-      // Only existing admins can list or manage other admin roles.
       allow list, write: if isAdmin();
     }
   }

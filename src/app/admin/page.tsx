@@ -34,6 +34,9 @@ export default function AdminPage() {
             }
 
             try {
+                // Force a token refresh to ensure the backend recognizes the latest state
+                await user.getIdToken(true);
+
                 // Verify admin status by checking the roles_admin collection
                 // The firestore.rules allow 'get' if the UID matches the document ID
                 const roleRef = doc(db, 'roles_admin', user.uid);
