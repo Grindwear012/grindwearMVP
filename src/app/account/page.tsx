@@ -40,13 +40,16 @@ import { useUser, useFirestore, useDoc, useCollection, useMemoFirebase } from '@
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { updateProfile } from 'firebase/auth';
-import { doc, updateDoc, collection } from 'firebase/firestore';
+import { doc, updateDoc, collection, query, orderBy } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { addDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase/non-blocking-updates';
-import { Loader2, MapPin, Trash2 } from 'lucide-react';
+import { Loader2, MapPin, Trash2, Package, ExternalLink } from 'lucide-react';
+import { format } from 'date-fns';
+import { Badge } from '@/components/ui/badge';
+import type { Order } from '@/lib/types';
 
 const addressSchema = z.object({
   street1: z.string().min(1, 'Street address is required'),
@@ -76,12 +79,19 @@ export default function AccountPage() {
 
   // Memoize the addresses collection reference
   const addressesRef = useMemoFirebase(() => {
-    // Only return the collection ref if we have a valid UID to prevent root list errors.
     if (!db || !user?.uid) return null;
     return collection(db, 'customers', user.uid, 'addresses');
   }, [db, user?.uid]);
 
   const { data: addresses, isLoading: isAddressesLoading } = useCollection(addressesRef);
+
+  // Memoize real orders query
+  const ordersRef = useMemoFirebase(() => {
+    if (!db || !user?.uid) return null;
+    return query(collection(db, 'customers', user.uid, 'orders'), orderBy('createdAt', 'desc'));
+  }, [db, user?.uid]);
+
+  const { data: orders, isLoading: isOrdersLoading } = useCollection<Order>(ordersRef);
 
   const addressForm = useForm<z.infer<typeof addressSchema>>({
     resolver: zodResolver(addressSchema),
@@ -101,16 +111,6 @@ export default function AccountPage() {
       router.push('/login');
     }
   }, [user, isUserLoading, router]);
-
-  // Notification for missing address
-  useEffect(() => {
-    if (!isUserLoading && user && !isAddressesLoading && addresses && addresses.length === 0) {
-      toast({
-        title: 'Welcome back!',
-        description: 'Please add a shipping address to your profile for faster checkout.',
-      });
-    }
-  }, [user, isUserLoading, isAddressesLoading, addresses, toast]);
 
   const handleUpdateProfile = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -180,140 +180,170 @@ export default function AccountPage() {
     });
   };
 
+  const getStatusVariant = (status: string) => {
+    switch (status) {
+      case 'shipped': return 'default';
+      case 'processing': return 'secondary';
+      case 'delivered': return 'outline';
+      case 'pending': return 'secondary';
+      case 'cancelled': return 'destructive';
+      default: return 'secondary';
+    }
+  };
+
   if (isUserLoading || !user) {
     return (
-      <div className="container mx-auto py-12 flex flex-col items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin mb-4" />
-        <p>Loading account details...</p>
+      <div className="container mx-auto py-32 flex flex-col items-center justify-center">
+        <Loader2 className="h-10 w-10 animate-spin mb-4 text-primary" />
+        <p className="text-muted-foreground font-bold uppercase tracking-widest text-xs">Authenticating...</p>
       </div>
     );
   }
 
-  const mockOrders = [
-    { id: 'ORD001', date: '2023-10-26', total: 'R120.00', status: 'Shipped' },
-    { id: 'ORD002', date: '2023-10-20', total: 'R45.00', status: 'Delivered' },
-  ];
-
   return (
     <div className="container mx-auto py-8 md:py-12 px-4">
-      <h1 className="mb-2 text-3xl font-bold">My Account</h1>
+      <h1 className="mb-2 text-3xl font-bold tracking-tighter uppercase italic">My Account</h1>
       <p className="text-muted-foreground mb-8">
         Manage your orders, profile, and addresses.
       </p>
       <Tabs defaultValue="orders">
-        <TabsList className="mb-6">
-          <TabsTrigger value="orders">Order History</TabsTrigger>
-          <TabsTrigger value="profile">Profile</TabsTrigger>
-          <TabsTrigger value="addresses">Addresses</TabsTrigger>
+        <TabsList className="mb-6 rounded-none bg-muted/50 p-1">
+          <TabsTrigger value="orders" className="rounded-none data-[state=active]:bg-background data-[state=active]:shadow-none font-bold uppercase tracking-widest px-8">Order History</TabsTrigger>
+          <TabsTrigger value="profile" className="rounded-none data-[state=active]:bg-background data-[state=active]:shadow-none font-bold uppercase tracking-widest px-8">Profile</TabsTrigger>
+          <TabsTrigger value="addresses" className="rounded-none data-[state=active]:bg-background data-[state=active]:shadow-none font-bold uppercase tracking-widest px-8">Addresses</TabsTrigger>
         </TabsList>
         <TabsContent value="orders">
-          <Card>
+          <Card className="border-none shadow-sm bg-muted/20">
             <CardHeader>
-              <CardTitle>Order History</CardTitle>
+              <CardTitle className="uppercase italic text-lg tracking-tight">Orders</CardTitle>
               <CardDescription>
                 View the details of your past orders.
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="hidden md:block">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Order ID</TableHead>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Total</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead></TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {mockOrders.map((order) => (
-                      <TableRow key={order.id}>
-                        <TableCell className="font-medium">{order.id}</TableCell>
-                        <TableCell>{order.date}</TableCell>
-                        <TableCell>{order.total}</TableCell>
-                        <TableCell>{order.status}</TableCell>
-                        <TableCell className="text-right">
-                          <Button variant="outline" size="sm">View Details</Button>
-                        </TableCell>
-                      </TableRow>
+              {isOrdersLoading ? (
+                <div className="flex justify-center py-12">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                </div>
+              ) : orders && orders.length > 0 ? (
+                <>
+                  <div className="hidden md:block">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="uppercase font-bold text-[10px] tracking-[0.2em] border-foreground/10">
+                          <TableHead>Order ID</TableHead>
+                          <TableHead>Date</TableHead>
+                          <TableHead>Total</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead></TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {orders.map((order) => (
+                          <TableRow key={order.id} className="border-foreground/5">
+                            <TableCell className="font-mono text-xs uppercase">#{order.id.slice(-8)}</TableCell>
+                            <TableCell className="text-sm font-medium">
+                              {order.orderDate ? format(new Date(order.orderDate), 'dd MMM yyyy') : 'Recently'}
+                            </TableCell>
+                            <TableCell className="font-bold">R{order.totalAmount.toFixed(2)}</TableCell>
+                            <TableCell>
+                              <Badge variant={getStatusVariant(order.fulfillmentStatus) as any} className="capitalize rounded-none text-[10px] font-black italic">
+                                {order.fulfillmentStatus}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <Button variant="ghost" size="sm" className="rounded-none font-bold text-[10px] uppercase">Details</Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                  <div className="space-y-4 md:hidden">
+                    {orders.map((order) => (
+                      <Card key={order.id} className="w-full rounded-none border-foreground/10">
+                        <CardHeader className="p-4">
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <CardTitle className="text-sm font-mono uppercase">#{order.id.slice(-8)}</CardTitle>
+                              <CardDescription className="text-[10px] uppercase font-bold tracking-widest">
+                                {order.orderDate ? format(new Date(order.orderDate), 'dd MMM yyyy') : 'Recently'}
+                              </CardDescription>
+                            </div>
+                            <Badge variant={getStatusVariant(order.fulfillmentStatus) as any} className="capitalize text-[10px] rounded-none italic">
+                              {order.fulfillmentStatus}
+                            </Badge>
+                          </div>
+                        </CardHeader>
+                        <CardContent className="p-4 pt-0">
+                          <p className="font-black text-lg">R{order.totalAmount.toFixed(2)}</p>
+                        </CardContent>
+                        <CardFooter className="p-4 border-t border-foreground/5">
+                          <Button variant="outline" size="sm" className="w-full rounded-none uppercase font-bold text-[10px] tracking-widest">
+                            View Details
+                          </Button>
+                        </CardFooter>
+                      </Card>
                     ))}
-                  </TableBody>
-                </Table>
-              </div>
-              <div className="space-y-4 md:hidden">
-                {mockOrders.map((order) => (
-                  <Card key={order.id} className="w-full">
-                    <CardHeader>
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <CardTitle className="text-lg">{order.id}</CardTitle>
-                          <CardDescription>{order.date}</CardDescription>
-                        </div>
-                        <p className="text-sm font-medium">{order.status}</p>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="font-semibold">{order.total}</p>
-                    </CardContent>
-                    <CardFooter>
-                      <Button variant="outline" size="sm" className="w-full">
-                        View Details
-                      </Button>
-                    </CardFooter>
-                  </Card>
-                ))}
-              </div>
+                  </div>
+                </>
+              ) : (
+                <div className="text-center py-20 border-2 border-dashed rounded-xl">
+                  <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-20" />
+                  <p className="text-muted-foreground font-bold uppercase tracking-widest text-xs">No orders yet</p>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
         <TabsContent value="profile">
-          <Card>
+          <Card className="border-none shadow-sm bg-muted/20">
             <CardHeader>
-              <CardTitle>Profile</CardTitle>
+              <CardTitle className="uppercase italic text-lg tracking-tight">Personal Info</CardTitle>
               <CardDescription>
                 Update your personal information.
               </CardDescription>
             </CardHeader>
             <form onSubmit={handleUpdateProfile}>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-6">
                 <div className="space-y-2">
-                  <Label htmlFor="name">Full Name</Label>
+                  <Label htmlFor="name" className="text-xs uppercase font-bold text-muted-foreground tracking-widest">Full Name</Label>
                   <Input 
                     id="name" 
                     name="name" 
                     defaultValue={customerData ? `${customerData.firstName} ${customerData.lastName}` : user.displayName || ''} 
                     required 
+                    className="rounded-none border-2 h-12"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input id="email" type="email" defaultValue={user.email || ''} readOnly disabled className="bg-muted" />
+                  <Label htmlFor="email" className="text-xs uppercase font-bold text-muted-foreground tracking-widest">Email</Label>
+                  <Input id="email" type="email" defaultValue={user.email || ''} readOnly disabled className="bg-muted rounded-none border-2 h-12" />
                 </div>
-                <Button type="submit" disabled={isSaving}>
-                  {isSaving ? 'Saving...' : 'Save Changes'}
+                <Button type="submit" disabled={isSaving} className="w-full rounded-none h-12 uppercase font-black italic tracking-widest">
+                  {isSaving ? 'Updating...' : 'Save Changes'}
                 </Button>
               </CardContent>
             </form>
           </Card>
         </TabsContent>
         <TabsContent value="addresses">
-          <Card>
+          <Card className="border-none shadow-sm bg-muted/20">
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
-                <CardTitle>Addresses</CardTitle>
+                <CardTitle className="uppercase italic text-lg tracking-tight">Addresses</CardTitle>
                 <CardDescription>
                   Manage your shipping and billing addresses.
                 </CardDescription>
               </div>
               <Dialog open={isAddressDialogOpen} onOpenChange={setIsAddressDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button size="sm">Add New</Button>
+                  <Button size="sm" className="rounded-none font-bold uppercase text-[10px] tracking-widest">Add New</Button>
                 </DialogTrigger>
-                <DialogContent className="max-w-md">
+                <DialogContent className="max-w-md rounded-none border-4">
                   <DialogHeader>
-                    <DialogTitle>Add New Address</DialogTitle>
-                    <DialogDescription>
+                    <DialogTitle className="uppercase italic text-2xl font-black">Add New Address</DialogTitle>
+                    <DialogDescription className="font-bold">
                       Enter your shipping details below.
                     </DialogDescription>
                   </DialogHeader>
@@ -324,9 +354,9 @@ export default function AccountPage() {
                         name="street1"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Street Address</FormLabel>
+                            <FormLabel className="uppercase text-[10px] font-bold tracking-widest text-muted-foreground">Street Address</FormLabel>
                             <FormControl>
-                              <Input placeholder="123 Main St" {...field} />
+                              <Input placeholder="123 Main St" className="rounded-none border-2" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -337,9 +367,9 @@ export default function AccountPage() {
                         name="city"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>City</FormLabel>
+                            <FormLabel className="uppercase text-[10px] font-bold tracking-widest text-muted-foreground">City</FormLabel>
                             <FormControl>
-                              <Input placeholder="Anytown" {...field} />
+                              <Input placeholder="Anytown" className="rounded-none border-2" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -351,9 +381,9 @@ export default function AccountPage() {
                           name="state"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>State/Province</FormLabel>
+                              <FormLabel className="uppercase text-[10px] font-bold tracking-widest text-muted-foreground">State/Province</FormLabel>
                               <FormControl>
-                                <Input placeholder="CA" {...field} />
+                                <Input placeholder="CA" className="rounded-none border-2" {...field} />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -364,9 +394,9 @@ export default function AccountPage() {
                           name="postalCode"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Postal Code</FormLabel>
+                              <FormLabel className="uppercase text-[10px] font-bold tracking-widest text-muted-foreground">Postal Code</FormLabel>
                               <FormControl>
-                                <Input placeholder="12345" {...field} />
+                                <Input placeholder="12345" className="rounded-none border-2" {...field} />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -378,15 +408,15 @@ export default function AccountPage() {
                         name="country"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Country</FormLabel>
+                            <FormLabel className="uppercase text-[10px] font-bold tracking-widest text-muted-foreground">Country</FormLabel>
                             <FormControl>
-                              <Input placeholder="USA" {...field} />
+                              <Input placeholder="USA" className="rounded-none border-2" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
-                      <Button type="submit" className="w-full">Save Address</Button>
+                      <Button type="submit" className="w-full rounded-none h-12 uppercase font-black italic tracking-widest">Save Address</Button>
                     </form>
                   </Form>
                 </DialogContent>
@@ -400,20 +430,20 @@ export default function AccountPage() {
                ) : (
                  <div className="grid gap-4">
                    {addresses?.map((address) => (
-                     <div key={address.id} className="border rounded-lg p-4 flex justify-between items-start">
+                     <div key={address.id} className="border-2 rounded-none p-4 flex justify-between items-start bg-background">
                         <div className="flex gap-3">
-                          <MapPin className="h-5 w-5 text-muted-foreground mt-0.5" />
+                          <MapPin className="h-5 w-5 text-primary mt-0.5" />
                           <div>
-                            <p className="font-semibold capitalize">{address.addressType} Address</p>
-                            <p className="text-muted-foreground">{address.street1}</p>
-                            <p className="text-muted-foreground">{address.city}, {address.state} {address.postalCode}</p>
-                            <p className="text-muted-foreground">{address.country}</p>
+                            <p className="font-black uppercase italic text-xs tracking-tight">{address.addressType} Address</p>
+                            <p className="text-muted-foreground text-sm font-medium">{address.street1}</p>
+                            <p className="text-muted-foreground text-sm font-medium">{address.city}, {address.state} {address.postalCode}</p>
+                            <p className="text-muted-foreground text-[10px] font-bold uppercase tracking-widest">{address.country}</p>
                           </div>
                         </div>
                         <Button 
                           variant="ghost" 
                           size="icon" 
-                          className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                          className="text-destructive hover:text-destructive hover:bg-destructive/10 rounded-none"
                           onClick={() => handleDeleteAddress(address.id)}
                         >
                           <Trash2 className="h-4 w-4" />
@@ -421,9 +451,9 @@ export default function AccountPage() {
                      </div>
                    ))}
                    {!isAddressesLoading && addresses?.length === 0 && (
-                     <div className="text-center py-8 border-2 border-dashed rounded-lg">
-                        <MapPin className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-                        <p className="text-muted-foreground">No addresses saved yet.</p>
+                     <div className="text-center py-12 border-2 border-dashed rounded-xl">
+                        <MapPin className="h-8 w-8 text-muted-foreground mx-auto mb-2 opacity-20" />
+                        <p className="text-muted-foreground font-bold uppercase text-[10px] tracking-widest">No addresses saved yet.</p>
                      </div>
                    )}
                  </div>
