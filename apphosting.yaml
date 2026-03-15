@@ -18,3 +18,15 @@ env:
     availability:
       - BUILD
       - RUNTIME
+  - variable: PAYFAST_MERCHANT_ID
+    value: 10041936
+    availability:
+      - RUNTIME
+  - variable: PAYFAST_MERCHANT_KEY
+    value: 05rmzafvu8xfk
+    availability:
+      - RUNTIME
+  - variable: PAYFAST_PASSPHRASE
+    value: Thriftclothingplug
+    availability:
+      - RUNTIME

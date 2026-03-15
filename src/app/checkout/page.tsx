@@ -142,7 +142,7 @@ export default function CheckoutPage() {
         merchant_key: '05rmzafvu8xfk',
         return_url: `${baseUrl}/checkout/success`,
         cancel_url: `${baseUrl}/checkout/cancel`,
-        notify_url: `${baseUrl}/api/payfast-notify`,
+        notify_url: `${baseUrl}/api/payment-notify`,
         name_first: values.firstName,
         name_last: values.lastName,
         email_address: values.email,
