@@ -113,7 +113,7 @@ export default function AdminPage() {
                     <TabsTrigger value="products" className="rounded-none data-[state=active]:bg-background data-[state=active]:shadow-none font-bold uppercase tracking-widest px-8">Products</TabsTrigger>
                 </TabsList>
                 <TabsContent value="orders">
-                    <AdminOrdersTab />
+                    <AdminOrdersTab isAuthorized={isAuthorized} />
                 </TabsContent>
                 <TabsContent value="products">
                     <AdminProductsTab />
