@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
 
     // 4. Fetch All Orders across all customers
     // Note: This requires a Collection Group index on 'orders'
-    const ordersSnap = await adminDb.collectionGroup('orders').orderBy('createdAt', 'desc').get();
+    const ordersSnap = await adminDb.collectionGroup('orders').get();
     
     const orders = ordersSnap.docs.map(doc => {
       const data = doc.data();
@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ orders });
   } catch (error: any) {
-    console.error('Admin orders API error:', error);
+    console.error('Admin orders API error:', error.code, error.message, JSON.stringify(error));
     return NextResponse.json(
       { error: error.message || 'Internal Server Error' }, 
       { status: 500 }
